@@ -279,6 +279,7 @@ bool UActionControlComponent::ActivateOrQueueAction(EQueueActions Action)
 	if (OwnerCharacter->GetState() == ECharacterState::Ready || IsAllowingComboAction)
 	{
 		// ready to activate
+		IsAllowingComboAction = false;
 		ActivateAction(Action);
 		return true;
 	}
