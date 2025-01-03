@@ -252,8 +252,9 @@ protected:
 	/* Called when look-direction changes */
 	void LookDirUpdated();
 
-	/* Called when move-direction changes */
-	void MoveDirUpdated(FVector2D Values, float Magnitude);
+	/* Returns the movement input - value 0 is the input direction angle and value 1 is the magnitude*/
+	UFUNCTION(BlueprintCallable)
+	FVector2D GetCurrentMovementInput();
 
 #pragma endregion
 

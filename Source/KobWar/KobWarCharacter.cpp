@@ -280,14 +280,17 @@ void AKobWarCharacter::LookDirUpdated()
 	OnLookDir.Broadcast(vector, vector.Size());
 }
 
-void AKobWarCharacter::MoveDirUpdated(FVector2D Values, float Magnitude)
+FVector2D AKobWarCharacter::GetCurrentMovementInput()
 {
 	float xVal = GetInputAxisValue("MoveForward");
 	float yVal = GetInputAxisValue("MoveRight");
 	FVector2D vector = FVector2D(xVal, yVal);
 	vector.Normalize();
 
-	OnMoveDir.Broadcast(vector, vector.Size());
+	float dir = FMath::Atan2(vector.Y, vector.X); // relative angle in radians
+	dir = FMath::RadiansToDegrees(dir);	// radians to degrees
+
+	return FVector2D(dir, vector.Size());
 }
 
 void AKobWarCharacter::MoveForward(float Value)

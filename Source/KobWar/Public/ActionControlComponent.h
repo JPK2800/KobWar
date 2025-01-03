@@ -8,6 +8,9 @@
 #include "KobWar/KobWarCharacter.h"
 #include "ActionControlComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFireActionEvent, FString, Event);
+
+
 UENUM(BlueprintType)
 enum EQueueActions
 {
@@ -32,6 +35,8 @@ private:
 	float AllowEndTime = 0.0f;
 	float AllowComboTime = 0.0f;
 
+	TMap<float, FName> EventsToFire = TMap<float, FName>();
+
 	bool InitializeTriggers()
 	{
 		if (ActionAnimation != nullptr)
@@ -50,6 +55,14 @@ private:
 				{
 					AllowEndTime = triggerTime;
 				}
+			}
+			const FAnimNotifyTrack notifiesEvents = ActionAnimation != nullptr && ActionAnimation->AnimNotifyTracks.IsValidIndex(1) ? ActionAnimation->AnimNotifyTracks[1] : FAnimNotifyTrack();
+			for (auto& notif : notifiesEvents.Notifies)
+			{
+				const FName& name = notif->NotifyName;
+				const float triggerTime = notif->GetTriggerTime();
+
+				EventsToFire.Add(TTuple<float, FName>(triggerTime, name));
 			}
 
 			AreTriggersUpdated = true;
@@ -78,6 +91,16 @@ public:
 		}
 
 		return AllowComboTime;
+	}
+
+	TMap<float, FName> GetEvents()
+	{
+		if (!AreTriggersUpdated)
+		{
+			InitializeTriggers();
+		}
+
+		return EventsToFire;
 	}
 };
 
@@ -167,6 +190,8 @@ public:
 
 #pragma region Queue or Activate Actions
 
+	bool ActivateOrQueueAction(EQueueActions Action);
+
 	UFUNCTION(BlueprintCallable, Category="Action")
 	void ActivateOrQueueLightAttack(bool Press, bool Release);
 
@@ -196,13 +221,21 @@ public:
 
 #pragma endregion
 
-	bool ActivateOrQueueAction(EQueueActions Action);
+#pragma region Event handling
+
+	UFUNCTION()
+	void HandleAnimationEvent(FName EventName);
+
+#pragma endregion
+
 
 protected:
 
 	AKobWarCharacter* OwnerCharacter = nullptr;
 
 	TArray<FActionQueueStruct> ActionQueue = TArray<FActionQueueStruct>();
+
+	TArray<FTimerHandle> EventTimers = TArray<FTimerHandle>();
 
 	FActionDataStruct CurrentAction;
 
@@ -232,4 +265,8 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FActionDataStruct LandAction;
 		
+	public:
+
+	UPROPERTY(BlueprintAssignable)
+	FFireActionEvent OnFireActionEvent;
 };

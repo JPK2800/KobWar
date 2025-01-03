@@ -159,6 +159,7 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 	{
 		bool isAnimFound = false;
 		UAnimMontage* playAnim = nullptr;
+		TMap<float, FName> eventMap;
 		float playEndTime = -1.0f;
 		float playComboTime = -1.0f;
 
@@ -167,6 +168,7 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 			playAnim = ActionData.ChargeAnimData[CurrentActionComboIndex].ActionAnimation;
 			playEndTime = ActionData.ChargeAnimData[CurrentActionComboIndex].GetAllowEndTime();
 			playComboTime = ActionData.ChargeAnimData[CurrentActionComboIndex].GetAllowComboTime();
+			eventMap = ActionData.ChargeAnimData[CurrentActionComboIndex].GetEvents();
 			isAnimFound = true;
 		}
 		else if (ActionData.AnimData.IsValidIndex(CurrentActionComboIndex) && ActionData.AnimData[CurrentActionComboIndex].ActionAnimation)
@@ -174,7 +176,7 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 			playAnim = ActionData.AnimData[CurrentActionComboIndex].ActionAnimation;
 			playEndTime = ActionData.AnimData[CurrentActionComboIndex].GetAllowEndTime();
 			playComboTime = ActionData.AnimData[CurrentActionComboIndex].GetAllowComboTime();
-
+			eventMap = ActionData.AnimData[CurrentActionComboIndex].GetEvents();
 			isAnimFound = true;
 		}
 		else if (ActionData.HasChargeAnim && ActionData.ChargeAnimData.IsValidIndex(0) && ActionData.ChargeAnimData[0].ActionAnimation)
@@ -182,6 +184,7 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 			playAnim = ActionData.ChargeAnimData[0].ActionAnimation;
 			playEndTime = ActionData.ChargeAnimData[0].GetAllowEndTime();
 			playComboTime = ActionData.ChargeAnimData[0].GetAllowComboTime();
+			eventMap = ActionData.ChargeAnimData[0].GetEvents();
 			isAnimFound = true;
 			CurrentActionComboIndex = 0;
 		}
@@ -190,6 +193,7 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 			playAnim = ActionData.AnimData[0].ActionAnimation;
 			playEndTime = ActionData.AnimData[0].GetAllowEndTime();
 			playComboTime = ActionData.AnimData[0].GetAllowComboTime();
+			eventMap = ActionData.AnimData[0].GetEvents();
 			isAnimFound = true;
 			CurrentActionComboIndex = 0;
 		}
@@ -208,6 +212,19 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 				UntilComboTimer.Invalidate();
 			}
 			GetWorld()->GetTimerManager().SetTimer(ActionTimer, this, &UActionControlComponent::ActionEnd, playEndTime > 0.0f ? playEndTime : playAnim->GetPlayLength());
+			for (auto& eventEntry : eventMap)
+			{
+				float timeToTrigger = eventEntry.Key;
+				FName eventName = eventEntry.Value;
+				FTimerHandle eventTimer = FTimerHandle();
+				if (timeToTrigger > 0.0f)
+				{
+					FTimerDelegate timerDelegate;
+					timerDelegate.BindUFunction(this, "HandleAnimationEvent", eventName);
+					GetWorld()->GetTimerManager().SetTimer(eventTimer, timerDelegate, timeToTrigger, false);
+					EventTimers.Add(eventTimer);
+				}
+			}
 			return true;
 		}
 	}
@@ -250,6 +267,28 @@ void UActionControlComponent::ActionEnd()
 	}
 	TriggerStateChange(ECharacterState::Ready);
 
+}
+
+bool UActionControlComponent::ActivateOrQueueAction(EQueueActions Action)
+{
+	if (!OwnerCharacter)
+	{
+		return false;
+	}
+
+	if (OwnerCharacter->GetState() == ECharacterState::Ready || IsAllowingComboAction)
+	{
+		// ready to activate
+		ActivateAction(Action);
+		return true;
+	}
+	else
+	{
+		// queue this action
+		QueueAction(Action);
+		return false;
+	}
+	return false;
 }
 
 void UActionControlComponent::ActivateOrQueueLightAttack(bool Press, bool Release)
@@ -313,25 +352,11 @@ bool UActionControlComponent::ForceActivateLand()
 	return TriggerLandAction();
 }
 
-bool UActionControlComponent::ActivateOrQueueAction(EQueueActions Action)
+void UActionControlComponent::HandleAnimationEvent(FName EventName)
 {
-	if (!OwnerCharacter)
-	{
-		return false;
-	}
+	FString stringEventName = EventName.ToString();
+	UE_LOG(LogTemp, Warning, TEXT("Event %s"), *stringEventName);
 
-	if (OwnerCharacter->GetState() == ECharacterState::Ready || IsAllowingComboAction)
-	{
-		// ready to activate
-		ActivateAction(Action);
-		return true;
-	}
-	else
-	{
-		// queue this action
-		QueueAction(Action);
-		return false;
-	}
-	return false;
+	OnFireActionEvent.Broadcast(stringEventName);
 }
 
