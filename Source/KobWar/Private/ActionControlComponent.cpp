@@ -98,6 +98,9 @@ void UActionControlComponent::ActivateAction(EQueueActions QueuedAction)
 		case (EQueueActions::Dodge):
 			TriggerDodgeAction();
 			break;
+		case (EQueueActions::Backstep):
+			TriggerBackstepAction();
+			break;
 		default:
 			return;
 	}
@@ -127,6 +130,12 @@ bool UActionControlComponent::TriggerDodgeAction()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerDodgeAction"));
 	return TriggerActionLogic(DodgeAction);
+}
+
+bool UActionControlComponent::TriggerBackstepAction()
+{
+	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerDodgeAction"));
+	return TriggerActionLogic(BackstepAction);
 }
 
 bool UActionControlComponent::TriggerStaggerAction()
@@ -308,13 +317,31 @@ void UActionControlComponent::ActivateOrQueueDodge(bool Press, bool Release)
 {
 	if (Press)
 	{
-		GetWorld()->GetTimerManager().SetTimer(DodgeThresholdTimer, this, &UActionControlComponent::EndDodgeReleaseThreshold, 0.25f);
+		GetWorld()->GetTimerManager().SetTimer(DodgeThresholdTimer, this, &UActionControlComponent::EndDodgeReleaseThreshold, DodgePressReleaseThreshold);
 		IsDodgeReleaseThreshold = true;
 	}
 
-	if (Release && IsDodgeReleaseThreshold)
+	if (!OwnerCharacter)
+		return;
+
+	auto moveInputs = OwnerCharacter->GetCurrentMovementInput();
+	if (moveInputs.Y > BackstepToDodgeThreshold)
 	{
-		ActivateOrQueueAction(EQueueActions::Dodge);
+		// dodge roll logic
+
+		if (Release && IsDodgeReleaseThreshold)
+		{
+			ActivateOrQueueAction(EQueueActions::Dodge);
+		}
+	}
+	else
+	{
+		// backstep logic
+
+		if (Release && IsDodgeReleaseThreshold)
+		{
+			ActivateOrQueueAction(EQueueActions::Backstep);
+		}
 	}
 }
 

@@ -18,6 +18,7 @@ enum EQueueActions
 	LightAttack = 1			UMETA(DisplayName = "LightAttack"),
 	HeavyAttack = 2			UMETA(DisplayName = "HeavyAttack"),
 	Dodge = 3				UMETA(DisplayName = "Dodge"),
+	Backstep = 4			UMETA(DisplayName = "Backstep"),
 };
 
 USTRUCT(BlueprintType)
@@ -168,6 +169,8 @@ protected:
 
 	bool TriggerDodgeAction();
 
+	bool TriggerBackstepAction();
+
 	bool TriggerStaggerAction();
 
 	bool TriggerLandAction();
@@ -250,21 +253,30 @@ protected:
 
 	FTimerHandle DodgeThresholdTimer;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct LightAttack;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct HeavyAttack;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct DodgeAction;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	FActionDataStruct BackstepAction;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct StaggerAction;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct LandAction;
 		
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Inputs")
+	float BackstepToDodgeThreshold = 0.4f;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Inputs")
+	float DodgePressReleaseThreshold = 0.20f;
+
 	public:
 
 	UPROPERTY(BlueprintAssignable)

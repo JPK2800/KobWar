@@ -252,10 +252,6 @@ protected:
 	/* Called when look-direction changes */
 	void LookDirUpdated();
 
-	/* Returns the movement input - value 0 is the input direction angle and value 1 is the magnitude*/
-	UFUNCTION(BlueprintCallable)
-	FVector2D GetCurrentMovementInput();
-
 #pragma endregion
 
 	/* Updates the character speed based on all current data */
@@ -263,6 +259,10 @@ protected:
 	void UpdateSpeed();
 
 public:
+
+	/* Returns the movement input - value 0 is the input direction angle and value 1 is the magnitude*/
+	UFUNCTION(BlueprintCallable)
+	FVector2D GetCurrentMovementInput();
 
 	void Falling() override;
 
