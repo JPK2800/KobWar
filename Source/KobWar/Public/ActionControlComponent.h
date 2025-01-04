@@ -272,7 +272,7 @@ protected:
 	FActionDataStruct LandAction;
 		
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Inputs")
-	float BackstepToDodgeThreshold = 0.4f;
+	float BackstepToDodgeThreshold = 0.7f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Inputs")
 	float DodgePressReleaseThreshold = 0.20f;
