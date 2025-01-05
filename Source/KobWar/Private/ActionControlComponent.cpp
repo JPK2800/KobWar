@@ -39,6 +39,11 @@ void UActionControlComponent::InitOwnerLink()
 
 bool UActionControlComponent::CheckQueueForNewAction()
 {
+	if (CurrentAction.IsCharging)
+	{
+		return false;
+	}
+
 	FDateTime now = FDateTime::Now();
 	FTimespan thresholdTime = FTimespan::FromSeconds(1.0f);
 
@@ -51,7 +56,6 @@ bool UActionControlComponent::CheckQueueForNewAction()
 		{
 			// this action is not expired! trigger it and clear the queue
 			ActivateAction(checkAction.Action);
-			ClearActionQueue();
 			return true;
 		}
 		i++;
@@ -154,7 +158,7 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerActionLogic"));
 
-	if (CurrentAction.ActionName.IsEqual(ActionData.ActionName))
+	if (!ActionData.HasChargeAnim && CurrentAction.ActionName.IsEqual(ActionData.ActionName))
 	{
 		// same as the current action, increment the combo value
 		CurrentActionComboIndex++;
@@ -172,12 +176,13 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 		float playEndTime = -1.0f;
 		float playComboTime = -1.0f;
 
-		if (ActionData.HasChargeAnim && ActionData.ChargeAnimData.IsValidIndex(CurrentActionComboIndex) && ActionData.ChargeAnimData[CurrentActionComboIndex].ActionAnimation)
+		if (ActionData.HasChargeAnim && !ActionData.IsCharging && ActionData.ChargeAnimData.IsValidIndex(CurrentActionComboIndex) && ActionData.ChargeAnimData[CurrentActionComboIndex].ActionAnimation)
 		{
 			playAnim = ActionData.ChargeAnimData[CurrentActionComboIndex].ActionAnimation;
 			playEndTime = ActionData.ChargeAnimData[CurrentActionComboIndex].GetAllowEndTime();
 			playComboTime = ActionData.ChargeAnimData[CurrentActionComboIndex].GetAllowComboTime();
 			eventMap = ActionData.ChargeAnimData[CurrentActionComboIndex].GetEvents();
+			ActionData.IsCharging = true;
 			isAnimFound = true;
 		}
 		else if (ActionData.AnimData.IsValidIndex(CurrentActionComboIndex) && ActionData.AnimData[CurrentActionComboIndex].ActionAnimation)
@@ -186,14 +191,16 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 			playEndTime = ActionData.AnimData[CurrentActionComboIndex].GetAllowEndTime();
 			playComboTime = ActionData.AnimData[CurrentActionComboIndex].GetAllowComboTime();
 			eventMap = ActionData.AnimData[CurrentActionComboIndex].GetEvents();
+			ActionData.IsCharging = false;
 			isAnimFound = true;
 		}
-		else if (ActionData.HasChargeAnim && ActionData.ChargeAnimData.IsValidIndex(0) && ActionData.ChargeAnimData[0].ActionAnimation)
+		else if (ActionData.HasChargeAnim && !ActionData.IsCharging && ActionData.ChargeAnimData.IsValidIndex(0) && ActionData.ChargeAnimData[0].ActionAnimation)
 		{
 			playAnim = ActionData.ChargeAnimData[0].ActionAnimation;
 			playEndTime = ActionData.ChargeAnimData[0].GetAllowEndTime();
 			playComboTime = ActionData.ChargeAnimData[0].GetAllowComboTime();
 			eventMap = ActionData.ChargeAnimData[0].GetEvents();
+			ActionData.IsCharging = true;
 			isAnimFound = true;
 			CurrentActionComboIndex = 0;
 		}
@@ -203,6 +210,7 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 			playEndTime = ActionData.AnimData[0].GetAllowEndTime();
 			playComboTime = ActionData.AnimData[0].GetAllowComboTime();
 			eventMap = ActionData.AnimData[0].GetEvents();
+			ActionData.IsCharging = false;
 			isAnimFound = true;
 			CurrentActionComboIndex = 0;
 		}
@@ -210,6 +218,7 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 		{
 			OwnerCharacter->PlayActionAnimation(playAnim);
 			CurrentAction = ActionData;
+			IsAllowingComboAction = false;
 			TriggerStateChange(ECharacterState::Acting);
 			if (playComboTime > 0.0f)
 			{
@@ -241,16 +250,25 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 	return false;
 }
 
-void UActionControlComponent::AllowComboAction()
+bool UActionControlComponent::TriggerChargeComboCurrentAction(bool ForceOnTimeout, bool IsButtonReleased)
 {
-	if (CheckQueueForNewAction())
+	if (CurrentAction.IsCharging && IsAllowingComboAction && (ForceOnTimeout || IsButtonReleased))
 	{
-		GetWorld()->GetTimerManager().ClearTimer(ActionTimer);
-		ActionTimer.Invalidate();
-		return;
+		bool result = TriggerActionLogic(CurrentAction);
+		return result;
 	}
 
+	return false;
+}
+
+void UActionControlComponent::AllowComboAction()
+{
 	IsAllowingComboAction = true;
+
+	if (!CheckQueueForNewAction())
+	{
+		TriggerChargeComboCurrentAction(false, !CurrentAction.IsHeld);
+	}
 }
 
 void UActionControlComponent::ActionEnd()
@@ -259,12 +277,17 @@ void UActionControlComponent::ActionEnd()
 	{
 		return;
 	}
+	if (TriggerChargeComboCurrentAction(true, false))
+	{
+		return;
+	}
 
 	// no queued action
 
 	CurrentActionComboIndex = 0;
-	CurrentAction.ActionName = "";
 	IsAllowingComboAction = false;
+	CurrentAction.IsCharging = false;
+	CurrentAction = EmptyAction;
 
 	if (auto* movementComp = OwnerCharacter->GetCharacterMovement())
 	{
@@ -288,7 +311,6 @@ bool UActionControlComponent::ActivateOrQueueAction(EQueueActions Action)
 	if (OwnerCharacter->GetState() == ECharacterState::Ready || IsAllowingComboAction)
 	{
 		// ready to activate
-		IsAllowingComboAction = false;
 		ActivateAction(Action);
 		return true;
 	}
@@ -304,21 +326,55 @@ bool UActionControlComponent::ActivateOrQueueAction(EQueueActions Action)
 void UActionControlComponent::ActivateOrQueueLightAttack(bool Press, bool Release)
 {
 	if (Press)
+	{
+		LightAttack.IsHeld = true;
 		ActivateOrQueueAction(EQueueActions::LightAttack);
+	}
+
+	if (Release)
+	{
+		LightAttack.IsHeld = false;
+		if (CurrentAction.ActionName == LightAttack.ActionName)
+		{
+			TriggerChargeComboCurrentAction(false, true);
+		}
+	}
 }
 
 void UActionControlComponent::ActivateOrQueueHeavyAttack(bool Press, bool Release)
 {
 	if (Press)
+	{
+		HeavyAttack.IsHeld = true;
 		ActivateOrQueueAction(EQueueActions::HeavyAttack);
+	}
+
+	if (Release)
+	{
+		HeavyAttack.IsHeld = false;
+		if (CurrentAction.ActionName == HeavyAttack.ActionName)
+		{
+			TriggerChargeComboCurrentAction(false, true);
+		}
+	}
 }
 
 void UActionControlComponent::ActivateOrQueueDodge(bool Press, bool Release)
 {
 	if (Press)
 	{
+		DodgeAction.IsHeld = true;
 		GetWorld()->GetTimerManager().SetTimer(DodgeThresholdTimer, this, &UActionControlComponent::EndDodgeReleaseThreshold, DodgePressReleaseThreshold);
 		IsDodgeReleaseThreshold = true;
+	}
+
+	if (Release)
+	{
+		DodgeAction.IsHeld = false;
+		if (CurrentAction.ActionName == DodgeAction.ActionName)
+		{
+			TriggerChargeComboCurrentAction(false, true);
+		}
 	}
 
 	if (!OwnerCharacter)

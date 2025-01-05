@@ -123,6 +123,10 @@ struct FActionDataStruct
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActionData")
 	TArray<FAnimationData> ChargeAnimData = TArray<FAnimationData>();
 
+	bool IsHeld = false;
+
+	bool IsCharging = false;
+
 };
 
 struct FActionQueueStruct
@@ -176,6 +180,8 @@ protected:
 	bool TriggerLandAction();
 
 	bool TriggerActionLogic(FActionDataStruct ActionData);
+
+	bool TriggerChargeComboCurrentAction(bool ForceOnTimeout, bool IsButtonReleased);
 
 	void AllowComboAction();
 
@@ -240,7 +246,7 @@ protected:
 
 	TArray<FTimerHandle> EventTimers = TArray<FTimerHandle>();
 
-	FActionDataStruct CurrentAction;
+	FActionDataStruct& CurrentAction = EmptyAction;
 
 	FTimerHandle ActionTimer;
 	FTimerHandle UntilComboTimer;
@@ -252,6 +258,8 @@ protected:
 	bool IsAllowingComboAction = false;
 
 	FTimerHandle DodgeThresholdTimer;
+
+	FActionDataStruct EmptyAction;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct LightAttack;
