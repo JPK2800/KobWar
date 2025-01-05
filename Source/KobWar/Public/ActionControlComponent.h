@@ -111,6 +111,8 @@ struct FActionDataStruct
 {
 	GENERATED_BODY()
 
+	FActionDataStruct() {}
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActionData")
 	FName ActionName;
 
@@ -122,10 +124,6 @@ struct FActionDataStruct
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActionData")
 	TArray<FAnimationData> ChargeAnimData = TArray<FAnimationData>();
-
-	bool IsHeld = false;
-
-	bool IsCharging = false;
 
 };
 
@@ -237,6 +235,20 @@ public:
 
 #pragma endregion
 
+#pragma region Charge actions
+
+	bool GetIsChargingAction(FName Action);
+
+	void SetNotChargingActions();
+
+	void SetActionIsCharging(FName Action);
+
+	bool GetChargingAction(FActionDataStruct& Action);
+
+	bool GetIsActionHeld(FName Action);
+
+#pragma endregion
+
 
 protected:
 
@@ -245,8 +257,6 @@ protected:
 	TArray<FActionQueueStruct> ActionQueue = TArray<FActionQueueStruct>();
 
 	TArray<FTimerHandle> EventTimers = TArray<FTimerHandle>();
-
-	FActionDataStruct& CurrentAction = EmptyAction;
 
 	FTimerHandle ActionTimer;
 	FTimerHandle UntilComboTimer;
@@ -257,9 +267,19 @@ protected:
 
 	bool IsAllowingComboAction = false;
 
-	FTimerHandle DodgeThresholdTimer;
+	bool IsLightHeld = false;
 
-	FActionDataStruct EmptyAction;
+	bool IsLightCharging = false;
+
+	bool IsHeavyHeld = false;
+
+	bool IsHeavyCharging = false;
+
+	bool IsDodgeHeld = false;
+
+	bool IsDodgeCharging = false;
+
+	FTimerHandle DodgeThresholdTimer;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct LightAttack;
@@ -284,6 +304,8 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Inputs")
 	float DodgePressReleaseThreshold = 0.20f;
+
+	FName CurrentAction = FName("?");
 
 	public:
 

@@ -39,7 +39,7 @@ void UActionControlComponent::InitOwnerLink()
 
 bool UActionControlComponent::CheckQueueForNewAction()
 {
-	if (CurrentAction.IsCharging)
+	if (GetIsChargingAction(CurrentAction))
 	{
 		return false;
 	}
@@ -158,7 +158,7 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerActionLogic"));
 
-	if (!ActionData.HasChargeAnim && CurrentAction.ActionName.IsEqual(ActionData.ActionName))
+	if (!ActionData.HasChargeAnim && CurrentAction.IsEqual(ActionData.ActionName))
 	{
 		// same as the current action, increment the combo value
 		CurrentActionComboIndex++;
@@ -176,13 +176,13 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 		float playEndTime = -1.0f;
 		float playComboTime = -1.0f;
 
-		if (ActionData.HasChargeAnim && !ActionData.IsCharging && ActionData.ChargeAnimData.IsValidIndex(CurrentActionComboIndex) && ActionData.ChargeAnimData[CurrentActionComboIndex].ActionAnimation)
+		if (ActionData.HasChargeAnim && !GetIsChargingAction(CurrentAction) && ActionData.ChargeAnimData.IsValidIndex(CurrentActionComboIndex) && ActionData.ChargeAnimData[CurrentActionComboIndex].ActionAnimation)
 		{
 			playAnim = ActionData.ChargeAnimData[CurrentActionComboIndex].ActionAnimation;
 			playEndTime = ActionData.ChargeAnimData[CurrentActionComboIndex].GetAllowEndTime();
 			playComboTime = ActionData.ChargeAnimData[CurrentActionComboIndex].GetAllowComboTime();
 			eventMap = ActionData.ChargeAnimData[CurrentActionComboIndex].GetEvents();
-			ActionData.IsCharging = true;
+			SetActionIsCharging(ActionData.ActionName);
 			isAnimFound = true;
 		}
 		else if (ActionData.AnimData.IsValidIndex(CurrentActionComboIndex) && ActionData.AnimData[CurrentActionComboIndex].ActionAnimation)
@@ -191,16 +191,16 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 			playEndTime = ActionData.AnimData[CurrentActionComboIndex].GetAllowEndTime();
 			playComboTime = ActionData.AnimData[CurrentActionComboIndex].GetAllowComboTime();
 			eventMap = ActionData.AnimData[CurrentActionComboIndex].GetEvents();
-			ActionData.IsCharging = false;
+			SetNotChargingActions();
 			isAnimFound = true;
 		}
-		else if (ActionData.HasChargeAnim && !ActionData.IsCharging && ActionData.ChargeAnimData.IsValidIndex(0) && ActionData.ChargeAnimData[0].ActionAnimation)
+		else if (ActionData.HasChargeAnim && !GetIsChargingAction(CurrentAction) && ActionData.ChargeAnimData.IsValidIndex(0) && ActionData.ChargeAnimData[0].ActionAnimation)
 		{
 			playAnim = ActionData.ChargeAnimData[0].ActionAnimation;
 			playEndTime = ActionData.ChargeAnimData[0].GetAllowEndTime();
 			playComboTime = ActionData.ChargeAnimData[0].GetAllowComboTime();
 			eventMap = ActionData.ChargeAnimData[0].GetEvents();
-			ActionData.IsCharging = true;
+			SetActionIsCharging(ActionData.ActionName);
 			isAnimFound = true;
 			CurrentActionComboIndex = 0;
 		}
@@ -210,14 +210,14 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 			playEndTime = ActionData.AnimData[0].GetAllowEndTime();
 			playComboTime = ActionData.AnimData[0].GetAllowComboTime();
 			eventMap = ActionData.AnimData[0].GetEvents();
-			ActionData.IsCharging = false;
+			SetNotChargingActions();
 			isAnimFound = true;
 			CurrentActionComboIndex = 0;
 		}
 		if (isAnimFound && playAnim != nullptr)
 		{
 			OwnerCharacter->PlayActionAnimation(playAnim);
-			CurrentAction = ActionData;
+			CurrentAction = ActionData.ActionName;
 			IsAllowingComboAction = false;
 			TriggerStateChange(ECharacterState::Acting);
 			if (playComboTime > 0.0f)
@@ -252,10 +252,14 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 
 bool UActionControlComponent::TriggerChargeComboCurrentAction(bool ForceOnTimeout, bool IsButtonReleased)
 {
-	if (CurrentAction.IsCharging && IsAllowingComboAction && (ForceOnTimeout || IsButtonReleased))
+	if (GetIsChargingAction(CurrentAction) && IsAllowingComboAction && (ForceOnTimeout || IsButtonReleased))
 	{
-		bool result = TriggerActionLogic(CurrentAction);
-		return result;
+		FActionDataStruct dataFound;
+		if (GetChargingAction(dataFound))
+		{
+			bool result = TriggerActionLogic(dataFound);
+			return result;
+		}
 	}
 
 	return false;
@@ -267,7 +271,7 @@ void UActionControlComponent::AllowComboAction()
 
 	if (!CheckQueueForNewAction())
 	{
-		TriggerChargeComboCurrentAction(false, !CurrentAction.IsHeld);
+		TriggerChargeComboCurrentAction(false, !GetIsActionHeld(CurrentAction));
 	}
 }
 
@@ -286,8 +290,9 @@ void UActionControlComponent::ActionEnd()
 
 	CurrentActionComboIndex = 0;
 	IsAllowingComboAction = false;
-	CurrentAction.IsCharging = false;
-	CurrentAction = EmptyAction;
+	SetNotChargingActions();
+
+	CurrentAction = FName("?");
 
 	if (auto* movementComp = OwnerCharacter->GetCharacterMovement())
 	{
@@ -308,7 +313,7 @@ bool UActionControlComponent::ActivateOrQueueAction(EQueueActions Action)
 		return false;
 	}
 
-	if (OwnerCharacter->GetState() == ECharacterState::Ready || IsAllowingComboAction)
+	if (OwnerCharacter->GetState() == ECharacterState::Ready || IsAllowingComboAction && (!GetIsChargingAction(CurrentAction)))
 	{
 		// ready to activate
 		ActivateAction(Action);
@@ -327,14 +332,14 @@ void UActionControlComponent::ActivateOrQueueLightAttack(bool Press, bool Releas
 {
 	if (Press)
 	{
-		LightAttack.IsHeld = true;
+		IsLightHeld = true;
 		ActivateOrQueueAction(EQueueActions::LightAttack);
 	}
 
 	if (Release)
 	{
-		LightAttack.IsHeld = false;
-		if (CurrentAction.ActionName == LightAttack.ActionName)
+		IsLightHeld = false;
+		if (CurrentAction == LightAttack.ActionName)
 		{
 			TriggerChargeComboCurrentAction(false, true);
 		}
@@ -345,14 +350,14 @@ void UActionControlComponent::ActivateOrQueueHeavyAttack(bool Press, bool Releas
 {
 	if (Press)
 	{
-		HeavyAttack.IsHeld = true;
+		IsHeavyHeld = true;
 		ActivateOrQueueAction(EQueueActions::HeavyAttack);
 	}
 
 	if (Release)
 	{
-		HeavyAttack.IsHeld = false;
-		if (CurrentAction.ActionName == HeavyAttack.ActionName)
+		IsHeavyHeld = false;
+		if (CurrentAction == HeavyAttack.ActionName)
 		{
 			TriggerChargeComboCurrentAction(false, true);
 		}
@@ -363,15 +368,15 @@ void UActionControlComponent::ActivateOrQueueDodge(bool Press, bool Release)
 {
 	if (Press)
 	{
-		DodgeAction.IsHeld = true;
+		IsDodgeHeld = true;
 		GetWorld()->GetTimerManager().SetTimer(DodgeThresholdTimer, this, &UActionControlComponent::EndDodgeReleaseThreshold, DodgePressReleaseThreshold);
 		IsDodgeReleaseThreshold = true;
 	}
 
 	if (Release)
 	{
-		DodgeAction.IsHeld = false;
-		if (CurrentAction.ActionName == DodgeAction.ActionName)
+		IsDodgeHeld = false;
+		if (CurrentAction == DodgeAction.ActionName)
 		{
 			TriggerChargeComboCurrentAction(false, true);
 		}
@@ -442,5 +447,82 @@ void UActionControlComponent::HandleAnimationEvent(FName EventName)
 	UE_LOG(LogTemp, Warning, TEXT("Event %s"), *stringEventName);
 
 	OnFireActionEvent.Broadcast(stringEventName);
+}
+
+bool UActionControlComponent::GetIsChargingAction(FName Action)
+{
+	if (LightAttack.ActionName.IsEqual(Action))
+	{
+		return IsLightCharging;
+	}
+	else if (HeavyAttack.ActionName.IsEqual(Action))
+	{
+		return IsHeavyCharging;
+	}
+	else if (DodgeAction.ActionName.IsEqual(Action))
+	{
+		return IsDodgeCharging;
+	}
+	return false;
+}
+
+void UActionControlComponent::SetNotChargingActions()
+{
+	IsLightCharging = false;
+	IsHeavyCharging = false;
+	IsDodgeCharging = false;
+}
+
+void UActionControlComponent::SetActionIsCharging(FName Action)
+{
+	if (LightAttack.ActionName.IsEqual(Action))
+	{
+		IsLightCharging = true;
+	}
+	else if (HeavyAttack.ActionName.IsEqual(Action))
+	{
+		IsHeavyCharging = true;
+	}
+	else if (DodgeAction.ActionName.IsEqual(Action))
+	{
+		IsDodgeCharging = true;
+	}
+}
+
+bool UActionControlComponent::GetChargingAction(FActionDataStruct& Action)
+{
+	if (IsLightCharging)
+	{
+		Action = LightAttack;
+		return true;
+	}
+	if (IsHeavyCharging)
+	{
+		Action = HeavyAttack;
+		return true;
+	}
+	if (IsDodgeCharging)
+	{
+		Action = DodgeAction;
+		return true;
+	}
+	return false;
+}
+
+bool UActionControlComponent::GetIsActionHeld(FName Action)
+{
+	if (LightAttack.ActionName.IsEqual(Action))
+	{
+		return IsLightHeld;
+	}
+	else if (HeavyAttack.ActionName.IsEqual(Action))
+	{
+		return IsHeavyHeld;
+	}
+	else if (DodgeAction.ActionName.IsEqual(Action))
+	{
+		return IsDodgeHeld;
+	}
+	return false;
 }
 
