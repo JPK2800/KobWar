@@ -27,8 +27,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSelectButton, bool, Press, bool, R
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FLockOnButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAttackLightButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAttackHeavyButton, bool, Press, bool, Release);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBlockButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDodgeButton, bool, Press, bool, Release);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBlockButton, bool, Press, bool, Release);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FLookDir, FVector2D, Direction, float, Value);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMoveDir, FVector2D, Direction, float, Value);
@@ -102,10 +102,10 @@ public:
 	FAttackHeavyButton OnAttackHeavyButton;
 
 	UPROPERTY(BlueprintAssignable)
-	FBlockButton OnBlockButton;
+	FDodgeButton OnDodgeButton;
 
 	UPROPERTY(BlueprintAssignable)
-	FDodgeButton OnDodgeButton;
+	FBlockButton OnBlockButton;
 
 	UPROPERTY(BlueprintAssignable)
 	FLookDir OnLookDir;
