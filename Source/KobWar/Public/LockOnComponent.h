@@ -64,11 +64,17 @@ protected:
 
 	void InterpCamToTargetStep(float DeltaTime);
 
-
 #pragma endregion
 
+#pragma region Lock-on verification
 
-	
+	void StartLockOnVerifyTimer();
+
+	void EndLockOnVerifyTimer();
+
+	void LockOnVerify();
+
+#pragma endregion
 
 public:	
 	// Called every frame
@@ -97,6 +103,13 @@ protected:
 
 #pragma endregion
 
+#pragma region Lock-on verification
+
+	FTimerHandle LockOnVerificationTimer;
+
+	uint8 NoVisionVerifyCount = 0;
+
+#pragma endregion
 
 public:
 
@@ -111,5 +124,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LockOnSwitchThreshold = 0.8f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float LockOnVerificationTime = 0.5f;
 
 };

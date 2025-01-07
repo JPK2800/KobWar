@@ -112,6 +112,7 @@ bool ULockOnComponent::SetLockOnTarget(ULockOnTargSceneComponent* LockOnTarg)
 		SetComponentTickEnabled(true);
 		OnLockedOn.Broadcast(true, LockOnTarg);
 		UpdateOwnerLockOnState(true);
+		StartLockOnVerifyTimer();
 		return true;
 	}
 
@@ -120,6 +121,7 @@ bool ULockOnComponent::SetLockOnTarget(ULockOnTargSceneComponent* LockOnTarg)
 	LockOnTarget = nullptr;
 	OnLockedOn.Broadcast(false, nullptr);
 	UpdateOwnerLockOnState(false);
+	EndLockOnVerifyTimer();
 	return false;
 }
 
@@ -361,6 +363,50 @@ void ULockOnComponent::InterpCamToTargetStep(float DeltaTime)
 		FRotator controllerRot = OwnerCharacter->GetController()->GetControlRotation();
 		FRotator newRot = FMath::RInterpTo(controllerRot, targSpringArmRot, DeltaTime, LockOnRotSpeed);
 		OwnerCharacter->GetController()->SetControlRotation(newRot);
+	}
+}
+
+void ULockOnComponent::StartLockOnVerifyTimer()
+{
+	NoVisionVerifyCount = 0;
+	GetWorld()->GetTimerManager().SetTimer(LockOnVerificationTimer, this, &ULockOnComponent::LockOnVerify, LockOnVerificationTime, true);
+}
+
+void ULockOnComponent::EndLockOnVerifyTimer()
+{
+	GetWorld()->GetTimerManager().ClearTimer(LockOnVerificationTimer);
+	LockOnVerificationTimer.Invalidate();
+}
+
+void ULockOnComponent::LockOnVerify()
+{
+	if (!LockOnTarget || !OwnerCamComponent || !OwnerCharacter)
+	{
+		EndLockOnVerifyTimer();
+	}
+
+	FVector startPos = OwnerCamComponent->GetComponentLocation();
+	FVector endPos = LockOnTarget->GetComponentLocation();
+
+	FHitResult visCheckHitResult;
+	TArray<AActor*> ignoreActorsVis = TArray<AActor*>();
+	ignoreActorsVis.Add(OwnerCharacter);
+	ignoreActorsVis.Add(LockOnTarget->GetOwner());
+	bool visResult = UKismetSystemLibrary::LineTraceSingle(GetWorld(), startPos, endPos, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ignoreActorsVis, IsShowingDebugLines ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, visCheckHitResult, true, FLinearColor::Green, FLinearColor::Red, 1.0f);
+	if (visResult)
+	{
+		NoVisionVerifyCount++;
+
+		if (NoVisionVerifyCount >= 2)
+		{
+			// vision blocked too long
+			SetLockOnTarget(nullptr);
+		}
+	}
+	else if (NoVisionVerifyCount > 0)
+	{
+		// has vision - reset counter
+		NoVisionVerifyCount = 0;
 	}
 }
 
