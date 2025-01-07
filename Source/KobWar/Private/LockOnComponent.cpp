@@ -419,3 +419,15 @@ void ULockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	InterpCamToTargetStep(DeltaTime);
 }
 
+bool ULockOnComponent::GetCurrentLockOnTarget(ULockOnTargSceneComponent*& TargetComponent)
+{
+	if (LockOnTarget)
+	{
+		TargetComponent = LockOnTarget;
+		return true;
+	}
+
+	TargetComponent = nullptr;
+	return false;
+}
+
