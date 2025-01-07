@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "ClientAuthoritativeCharacter.h"
+#include "LockOnTargSceneComponent.h"
+#include "LockOnComponent.h"
 #include "KobWarCharacter.generated.h"
 
 class UActionControlComponent;
@@ -61,6 +63,12 @@ class AKobWarCharacter : public AClientAuthoritativeCharacter
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions", meta = (AllowPrivateAccess = "true"))
 	class UActionControlComponent* ActionControl;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions", meta = (AllowPrivateAccess = "true"))
+	class ULockOnTargSceneComponent* LockOnTargetComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions", meta = (AllowPrivateAccess = "true"))
+	class ULockOnComponent* LockOnComponent;
 
 protected:
 
@@ -290,5 +298,9 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	FORCEINLINE class ULockOnTargSceneComponent* GetLockOnTargScene() const { return LockOnTargetComponent; }
+
+	FORCEINLINE class ULockOnComponent* GetLockOnComponent() const { return LockOnComponent; }
 };
 

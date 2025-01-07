@@ -46,6 +46,11 @@ AKobWarCharacter::AKobWarCharacter(const FObjectInitializer& ObjectInitializer) 
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	ActionControl = CreateDefaultSubobject<UActionControlComponent>(TEXT("ActionControl"));
+
+	LockOnTargetComponent = CreateDefaultSubobject<ULockOnTargSceneComponent>(TEXT("LockOnTargetComponent"));
+	LockOnTargetComponent->SetupAttachment(RootComponent);
+
+	LockOnComponent = CreateDefaultSubobject<ULockOnComponent>(TEXT("LockOnComponent"));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -272,8 +277,8 @@ void AKobWarCharacter::ViewVerticalController(float Value)
 
 void AKobWarCharacter::LookDirUpdated()
 {
-	float xVal = GetInputAxisValue("TurnRate");
-	float yVal = GetInputAxisValue("LookUpRate");
+	float xVal = GetInputAxisValue("TurnRate") + GetInputAxisValue("Turn");
+	float yVal = -GetInputAxisValue("LookUpRate") - GetInputAxisValue("LookUp");
 	FVector2D vector = FVector2D(xVal, yVal);
 	vector.Normalize();
 
