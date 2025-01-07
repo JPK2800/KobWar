@@ -183,7 +183,7 @@ void ULockOnComponent::LockOnMoveDir(FVector2D InputDir, float Value)
 		{
 			angleDif += 360.0f;  // Adjust for wrapping around
 		}
-		if (FMath::Abs(angleDif) <= 90.0f && (((FMath::Abs(angleDif) <= 20.0f ) && angleDif < bestAngle) || (posDist < bestDist)))
+		if (FMath::Abs(angleDif) <= 70.0f && (((FMath::Abs(angleDif) <= 30.0f ) && angleDif < bestAngle) || (posDist < bestDist)))
 		{
 			bestChar = character;
 			bestAngle = angleDif;
@@ -272,9 +272,15 @@ bool ULockOnComponent::IsPosInFov(const FVector ViewPosition, const FRotator Vie
 TMap<AKobWarCharacter*, FVector2D> ULockOnComponent::GetPotentialCharactersForLockOn()
 {
 	FVector startPos = OwnerCamComponent->GetComponentLocation();
-	FVector endPos = startPos + OwnerCamComponent->GetComponentRotation().Vector()*2000.0f;
+	float currentTargDist = 2000.0f;
+	if (LockOnTarget)
+	{
+		currentTargDist += UKismetMathLibrary::Vector_Distance(startPos, LockOnTarget->GetComponentLocation());
+	}
 
-	FVector boxExtent(1600.0f, 800.0f, 800.0f);
+	FVector endPos = startPos + OwnerCamComponent->GetComponentRotation().Vector() * currentTargDist;
+
+	FVector boxExtent(currentTargDist, 800.0f, 800.0f);
 
 	TArray<FHitResult> hitresults;
 	TArray<AActor*> ignoreActors = TArray<AActor*>();

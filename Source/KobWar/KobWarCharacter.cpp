@@ -252,9 +252,9 @@ void AKobWarCharacter::BlockReleased()
 
 void AKobWarCharacter::ViewHorizontalMouse(float Value)
 {
-	if (IsLockedOn && FMath::Abs(Value) >= 0.5f)
+	if (IsLockedOn && FMath::Abs(Value) >= LockOnCamMoveThreshold)
 	{
-		TurnAtRate(Value > 0 ? Value - 0.5f : Value + 0.5f);
+		TurnAtRate(Value > 0 ? Value - LockOnCamMoveThreshold : Value + LockOnCamMoveThreshold);
 	}
 	else if (!IsLockedOn)
 	{
@@ -266,9 +266,9 @@ void AKobWarCharacter::ViewHorizontalMouse(float Value)
 
 void AKobWarCharacter::ViewVerticalMouse(float Value)
 {
-	if (IsLockedOn && FMath::Abs(Value) >= 0.5f)
+	if (IsLockedOn && FMath::Abs(Value) >= LockOnCamMoveThreshold)
 	{
-		LookUpAtRate(Value > 0 ? Value - 0.5f : Value + 0.5f);
+		LookUpAtRate(Value > 0 ? Value - LockOnCamMoveThreshold : Value + LockOnCamMoveThreshold);
 	}
 	else if (!IsLockedOn)
 	{
@@ -282,7 +282,7 @@ void AKobWarCharacter::ViewHorizontalController(float Value)
 {
 	if (IsLockedOn && FMath::Abs(Value) >= 0.5f)
 	{
-		AddControllerYawInput(Value > 0 ? Value - 0.5f : Value + 0.5f);
+		AddControllerYawInput(Value > 0 ? Value - LockOnCamMoveThreshold : Value + LockOnCamMoveThreshold);
 	}
 	else if (!IsLockedOn)
 	{
@@ -294,9 +294,9 @@ void AKobWarCharacter::ViewHorizontalController(float Value)
 
 void AKobWarCharacter::ViewVerticalController(float Value)
 {
-	if (IsLockedOn && FMath::Abs(Value) >= 0.5f)
+	if (IsLockedOn && FMath::Abs(Value) >= LockOnCamMoveThreshold)
 	{
-		AddControllerPitchInput(Value > 0 ? Value - 0.5f : Value + 0.5f);
+		AddControllerPitchInput(Value > 0 ? Value - LockOnCamMoveThreshold : Value + LockOnCamMoveThreshold);
 	}
 	else if (!IsLockedOn)
 	{

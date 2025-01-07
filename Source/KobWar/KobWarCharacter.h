@@ -79,6 +79,9 @@ protected:
 #pragma region LockOn
 
 	bool IsLockedOn;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float LockOnCamMoveThreshold = 0.8f;
 #pragma endregion
 	
 
