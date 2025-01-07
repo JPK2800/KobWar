@@ -67,13 +67,20 @@ class AKobWarCharacter : public AClientAuthoritativeCharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions", meta = (AllowPrivateAccess = "true"))
 	class ULockOnTargSceneComponent* LockOnTargetComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions", meta = (AllowPrivateAccess = "true"))
-	class ULockOnComponent* LockOnComponent;
-
 protected:
+
+#pragma region States
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	TEnumAsByte<ECharacterState> CharacterState = ECharacterState::Ready;
+
+#pragma endregion
+
+#pragma region LockOn
+
+	bool IsLockedOn;
+#pragma endregion
+	
 
 public:
 
@@ -272,6 +279,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FVector2D GetCurrentMovementInput();
 
+#pragma region States
+
 	void Falling() override;
 
 	void Landed(const FHitResult& Hit) override;
@@ -287,6 +296,14 @@ public:
 	/* Action animation play */
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayActionAnimation(UAnimMontage* Animation);
+#pragma endregion
+
+#pragma region LockOn
+
+	/* Updated lock state from LockOnComponent */
+	void UpdateCameraControlMode(bool ToggleLockedOn);
+
+#pragma endregion
 
 protected:
 	// APawn interface
@@ -301,6 +318,5 @@ public:
 
 	FORCEINLINE class ULockOnTargSceneComponent* GetLockOnTargScene() const { return LockOnTargetComponent; }
 
-	FORCEINLINE class ULockOnComponent* GetLockOnComponent() const { return LockOnComponent; }
 };
 

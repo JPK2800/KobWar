@@ -109,15 +109,17 @@ bool ULockOnComponent::SetLockOnTarget(ULockOnTargSceneComponent* LockOnTarg)
 	{
 		StartLockSwitchTimer();
 		LockOnTarget = LockOnTarg;
-		//OwnerSpringArmComponent->bUsePawnControlRotation = false; 
 		SetComponentTickEnabled(true);
+		OnLockedOn.Broadcast(true, LockOnTarg);
+		UpdateOwnerLockOnState(true);
 		return true;
 	}
 
 
 	SetComponentTickEnabled(false);
 	LockOnTarget = nullptr;
-	//OwnerSpringArmComponent->bUsePawnControlRotation = true;
+	OnLockedOn.Broadcast(false, nullptr);
+	UpdateOwnerLockOnState(false);
 	return false;
 }
 
@@ -181,10 +183,11 @@ void ULockOnComponent::LockOnMoveDir(FVector2D InputDir, float Value)
 		{
 			angleDif += 360.0f;  // Adjust for wrapping around
 		}
-		if (FMath::Abs(angleDif) <= 60.0f && (((FMath::Abs(angleDif) < bestAngle - 30.0f)) || (posDist < bestDist)))
+		if (FMath::Abs(angleDif) <= 90.0f && (((FMath::Abs(angleDif) <= 20.0f ) && angleDif < bestAngle) || (posDist < bestDist)))
 		{
 			bestChar = character;
 			bestAngle = angleDif;
+			bestDist = posDist;
 		}
 	}
 
@@ -206,7 +209,7 @@ void ULockOnComponent::EndLockSwitchTimer()
 	IsLockSwitchTimerActive = false;
 }
 
-bool ULockOnComponent::IsPosInFov(FVector ViewPosition, FRotator ViewRot, FVector TargPosition, float Fov, float& AngleDistance, float& AngleDirection)
+bool ULockOnComponent::IsPosInFov(const FVector ViewPosition, const FRotator ViewRot, const bool IsCurrentlyLockedOn, const FVector CurrentLockOnPos, const FVector TargPosition, const float Fov, float& AngleDistance, float& AngleDirection)
 {
 	// angle distance
 	FVector directionToTarg = (TargPosition - ViewPosition).GetSafeNormal();
@@ -231,15 +234,30 @@ bool ULockOnComponent::IsPosInFov(FVector ViewPosition, FRotator ViewRot, FVecto
 		if (!targOnScreen)
 			return false;
 
-		int32 dimensionScreenX, dimensionScreenY;
-		OwnerPlayerController->GetViewportSize(dimensionScreenX, dimensionScreenY);
-		int32 screenHalfWidth = dimensionScreenX / 2; int32 screenHalfHeight = dimensionScreenY / 2;
+		if (IsCurrentlyLockedOn)
+		{
+			FVector2D currentLockOnPos;
+			bool currentLockOn = OwnerPlayerController->ProjectWorldLocationToScreen(CurrentLockOnPos, currentLockOnPos);
+			if (currentLockOn)
+			{
+				// refer to current lock on target pos on screen
 
-		float angleDirRadians = FMath::Atan2(-(screenHalfWidth - screenPos.X), screenHalfHeight - screenPos.Y);
+				float angleDirRadians = FMath::Atan2(-(currentLockOnPos.X - screenPos.X), currentLockOnPos.Y - screenPos.Y);
+				AngleDirection = FMath::RadiansToDegrees(angleDirRadians);
+				AngleDistance = FMath::Abs(currentLockOnPos.X - screenPos.X) + FMath::Abs(currentLockOnPos.Y - screenPos.Y);
+				return true;
+			}
+		}
+
+		// no current lock on target or they are off-screen
+		int32 screenX, screenY;
+		OwnerPlayerController->GetViewportSize(screenX, screenY);
+
+		float angleDirRadians = FMath::Atan2(-(screenX/2 - screenPos.X), screenY/2 - screenPos.Y);
 		AngleDirection = FMath::RadiansToDegrees(angleDirRadians);
-
-		AngleDistance = FMath::Abs(screenHalfWidth - screenPos.X) + FMath::Abs(screenHalfHeight - screenPos.Y);
+		AngleDistance = FMath::Abs(screenX/2 - screenPos.X) + FMath::Abs(screenY/2 - screenPos.Y);
 		return true;
+		
 	}
 	else
 	{
@@ -289,7 +307,7 @@ TMap<AKobWarCharacter*, FVector2D> ULockOnComponent::GetPotentialCharactersForLo
 
 			float angleDist;
 			float angleDir;
-			if (!IsPosInFov(startPos, OwnerCamComponent->GetComponentRotation(), targPos, OwnerCamComponent->FieldOfView, angleDist, angleDir))
+			if (!IsPosInFov(startPos, OwnerCamComponent->GetComponentRotation(), LockOnTarget != nullptr, LockOnTarget != nullptr ? LockOnTarget->GetComponentLocation() : FVector::ZeroVector, targPos, OwnerCamComponent->FieldOfView, angleDist, angleDir))
 			{
 				// not in fov, return
 				continue;
@@ -300,7 +318,7 @@ TMap<AKobWarCharacter*, FVector2D> ULockOnComponent::GetPotentialCharactersForLo
 			TArray<AActor*> ignoreActorsVis = TArray<AActor*>();
 			ignoreActorsVis.Add(OwnerCharacter);
 			ignoreActorsVis.Add(targetChar);
-			bool visResult = UKismetSystemLibrary::LineTraceSingle(GetWorld(), visioncheckStartPos, visioncheckEndPos, ETraceTypeQuery::TraceTypeQuery4, false, ignoreActorsVis, IsShowingDebugLines ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, visCheckHitResult, true, FLinearColor::Green, FLinearColor::Red, 1.0f);
+			bool visResult = UKismetSystemLibrary::LineTraceSingle(GetWorld(), visioncheckStartPos, visioncheckEndPos, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ignoreActorsVis, IsShowingDebugLines ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, visCheckHitResult, true, FLinearColor::Green, FLinearColor::Red, 1.0f);
 			if (visResult)
 			{
 				// vision blocked
@@ -314,6 +332,14 @@ TMap<AKobWarCharacter*, FVector2D> ULockOnComponent::GetPotentialCharactersForLo
 	}
 
 	return availableCharacters;
+}
+
+void ULockOnComponent::UpdateOwnerLockOnState(bool Toggle)
+{
+	if (OwnerCharacter)
+	{
+		OwnerCharacter->UpdateCameraControlMode(Toggle);
+	}
 }
 
 void ULockOnComponent::InterpCamToTargetStep(float DeltaTime)

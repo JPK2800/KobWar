@@ -49,8 +49,6 @@ AKobWarCharacter::AKobWarCharacter(const FObjectInitializer& ObjectInitializer) 
 
 	LockOnTargetComponent = CreateDefaultSubobject<ULockOnTargSceneComponent>(TEXT("LockOnTargetComponent"));
 	LockOnTargetComponent->SetupAttachment(RootComponent);
-
-	LockOnComponent = CreateDefaultSubobject<ULockOnComponent>(TEXT("LockOnComponent"));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -66,6 +64,11 @@ void AKobWarCharacter::UpdateSpeed()
 	{
 		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
 	}
+}
+
+void AKobWarCharacter::UpdateCameraControlMode(bool ToggleLockedOn)
+{
+	IsLockedOn = ToggleLockedOn;
 }
 
 void AKobWarCharacter::Falling()
@@ -249,40 +252,68 @@ void AKobWarCharacter::BlockReleased()
 
 void AKobWarCharacter::ViewHorizontalMouse(float Value)
 {
-	TurnAtRate(Value);
+	if (IsLockedOn && FMath::Abs(Value) >= 0.5f)
+	{
+		TurnAtRate(Value > 0 ? Value - 0.5f : Value + 0.5f);
+	}
+	else if (!IsLockedOn)
+	{
+		TurnAtRate(Value);
+	}
 
 	LookDirUpdated();
 }
 
 void AKobWarCharacter::ViewVerticalMouse(float Value)
 {
-	LookUpAtRate(Value);
+	if (IsLockedOn && FMath::Abs(Value) >= 0.5f)
+	{
+		LookUpAtRate(Value > 0 ? Value - 0.5f : Value + 0.5f);
+	}
+	else if (!IsLockedOn)
+	{
+		LookUpAtRate(Value);
+	}
 
 	LookDirUpdated();
 }
 
 void AKobWarCharacter::ViewHorizontalController(float Value)
 {
-	AddControllerYawInput(Value);
+	if (IsLockedOn && FMath::Abs(Value) >= 0.5f)
+	{
+		AddControllerYawInput(Value > 0 ? Value - 0.5f : Value + 0.5f);
+	}
+	else if (!IsLockedOn)
+	{
+		AddControllerYawInput(Value);
+	}
 
 	LookDirUpdated();
 }
 
 void AKobWarCharacter::ViewVerticalController(float Value)
 {
-	AddControllerPitchInput(Value);
+	if (IsLockedOn && FMath::Abs(Value) >= 0.5f)
+	{
+		AddControllerPitchInput(Value > 0 ? Value - 0.5f : Value + 0.5f);
+	}
+	else if (!IsLockedOn)
+	{
+		AddControllerPitchInput(Value);
+	}
 
 	LookDirUpdated();
 }
 
 void AKobWarCharacter::LookDirUpdated()
 {
-	float xVal = GetInputAxisValue("TurnRate") + GetInputAxisValue("Turn");
-	float yVal = -GetInputAxisValue("LookUpRate") - GetInputAxisValue("LookUp");
+	float xVal = FMath::Clamp(GetInputAxisValue("TurnRate") + GetInputAxisValue("Turn"), -1.0f, 1.0f);
+	float yVal = FMath::Clamp(- GetInputAxisValue("LookUpRate") - GetInputAxisValue("LookUp"), -1.0f, 1.0f);
 	FVector2D vector = FVector2D(xVal, yVal);
 	vector.Normalize();
 
-	OnLookDir.Broadcast(vector, vector.Size());
+	OnLookDir.Broadcast(vector, FVector2D(xVal, yVal).Size());
 }
 
 FVector2D AKobWarCharacter::GetCurrentMovementInput()

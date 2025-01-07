@@ -14,7 +14,9 @@
 class AKobWarCharacter;
 class AGamePlayerController;
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FLockedOn, bool, Active, ULockOnTargSceneComponent*, TargComponent);
+
+UCLASS(Blueprintable)
 class KOBWAR_API ULockOnComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -22,6 +24,9 @@ class KOBWAR_API ULockOnComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	ULockOnComponent();
+
+	UPROPERTY(BlueprintAssignable)
+	FLockedOn OnLockedOn;
 
 protected:
 	// Called when the game starts
@@ -47,9 +52,11 @@ protected:
 
 	void EndLockSwitchTimer();
 
-	bool IsPosInFov(FVector ViewPosition, FRotator ViewRot, FVector TargPosition, float Fov, float& AngleDistance, float& AngleDirection);
+	bool IsPosInFov(const FVector ViewPosition, const FRotator ViewRot, const bool IsCurrentlyLockedOn, const FVector CurrentLockOnPos, const FVector TargPosition, const float Fov, float& AngleDistance, float& AngleDirection);
 
 	TMap<AKobWarCharacter*, FVector2D> GetPotentialCharactersForLockOn();
+
+	void UpdateOwnerLockOnState(bool Toggle);
 
 #pragma endregion
 
@@ -75,6 +82,7 @@ protected:
 
 	USpringArmComponent* OwnerSpringArmComponent;
 
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	AGamePlayerController* OwnerPlayerController;
 
 	FRotator DefaultCamRotationRelative;
@@ -87,10 +95,6 @@ protected:
 
 	bool IsLockSwitchTimerActive = false;
 
-	float LockSwitchTime = 0.35f;
-
-	float LockOnSwitchThreshold = 0.8f;
-
 #pragma endregion
 
 
@@ -101,5 +105,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LockOnRotSpeed = 5.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float LockSwitchTime = 0.35f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float LockOnSwitchThreshold = 0.8f;
 
 };
