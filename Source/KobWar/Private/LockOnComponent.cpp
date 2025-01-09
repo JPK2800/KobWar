@@ -137,6 +137,8 @@ void ULockOnComponent::LockOnMoveDir(FVector2D InputDir, float Value)
 		return;
 	}
 
+	// SetLockOnOffset(InputDir * Value, Value);
+
 	if (Value <= LockOnSwitchThreshold)
 	{
 		return;
@@ -361,6 +363,7 @@ void ULockOnComponent::InterpCamToTargetStep(float DeltaTime)
 	if (OwnerCharacter->GetController())
 	{
 		FRotator controllerRot = OwnerCharacter->GetController()->GetControlRotation();
+		controllerRot.Add(LockOnOffset.Y, LockOnOffset.X, 0);
 		FRotator newRot = FMath::RInterpTo(controllerRot, targSpringArmRot, DeltaTime, LockOnRotSpeed);
 		OwnerCharacter->GetController()->SetControlRotation(newRot);
 	}
@@ -410,6 +413,14 @@ void ULockOnComponent::LockOnVerify()
 	}
 }
 
+//void ULockOnComponent::InterpLockOnOffset(float DeltaTime)
+//{
+//	if (ResetLockOnOffset)
+//	{
+//		LockOnOffset = FMath::Vector2DInterpTo(LockOnOffset, FVector2D(0.0f, 0.0f), DeltaTime, 0.75f);
+//	}
+//}
+
 
 // Called every frame
 void ULockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -417,6 +428,8 @@ void ULockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	InterpCamToTargetStep(DeltaTime);
+
+	//InterpLockOnOffset(DeltaTime);
 }
 
 bool ULockOnComponent::GetCurrentLockOnTarget(ULockOnTargSceneComponent*& TargetComponent)
@@ -430,4 +443,17 @@ bool ULockOnComponent::GetCurrentLockOnTarget(ULockOnTargSceneComponent*& Target
 	TargetComponent = nullptr;
 	return false;
 }
+
+//void ULockOnComponent::SetLockOnOffset(FVector2D NewOffset, float Value)
+//{
+//	if (Value >= 0.1f)
+//	{
+//		LockOnOffset = NewOffset;
+//		ResetLockOnOffset = false;
+//	}
+//	else
+//	{
+//		ResetLockOnOffset = true;
+//	}
+//}
 

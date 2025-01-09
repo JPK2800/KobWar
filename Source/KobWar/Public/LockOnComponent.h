@@ -64,6 +64,8 @@ protected:
 
 	void InterpCamToTargetStep(float DeltaTime);
 
+	//void InterpLockOnOffset(float DeltaTime);
+
 #pragma endregion
 
 #pragma region Lock-on verification
@@ -74,6 +76,8 @@ protected:
 
 	void LockOnVerify();
 
+	// void InterpLockOnOffset(float DeltaTime);
+
 #pragma endregion
 
 public:	
@@ -82,6 +86,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool GetCurrentLockOnTarget(ULockOnTargSceneComponent*& TargetComponent);
+
+	//UFUNCTION(BlueprintCallable)
+	//void SetLockOnOffset(FVector2D NewOffset, float Value);
 
 protected:
 
@@ -103,6 +110,10 @@ protected:
 	FTimerHandle LockSwitchTimer;
 
 	bool IsLockSwitchTimerActive = false;
+
+	FVector2D LockOnOffset = FVector2D(0.0f, 0.0f);
+
+	//bool ResetLockOnOffset = false;
 
 #pragma endregion
 

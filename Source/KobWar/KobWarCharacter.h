@@ -268,7 +268,7 @@ protected:
 	void ViewVerticalController(float Value);
 
 	/* Called when look-direction changes */
-	void LookDirUpdated();
+	void LookDirUpdated(FVector2D& NormalizedInputVector, float& Magnitude);
 
 #pragma endregion
 
@@ -278,9 +278,22 @@ protected:
 
 public:
 
+#pragma region Inputs
+
 	/* Returns the movement input - value 0 is the input direction angle and value 1 is the magnitude*/
 	UFUNCTION(BlueprintCallable)
 	FVector2D GetCurrentMovementInput();
+
+	/* Returns the view movement input - X is horizontal and Y is vertical and both range from -1 to 1 */
+	UFUNCTION(BlueprintCallable)
+	FVector2D GetCurrentViewInput();
+
+	/* Returns the current relative movement velocity - X is forward and Y is right */
+	UFUNCTION(BlueprintCallable)
+	FVector2D GetActorDirectionalVelocity();
+
+#pragma endregion
+	
 
 #pragma region States
 
