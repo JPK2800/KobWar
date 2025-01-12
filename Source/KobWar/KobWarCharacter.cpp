@@ -70,6 +70,22 @@ void AKobWarCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_WITH_PARAMS(AKobWarCharacter, GenericTeamId, sharedParams_NoCond);
 }
 
+void AKobWarCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (NewController->HasAuthority())
+	{
+		APlayerController* playerController = Cast<APlayerController>(NewController);
+		MulticastPossessedByPlayer(playerController);
+	}
+}
+
+void AKobWarCharacter::MulticastPossessedByPlayer_Implementation(APlayerController* NewController)
+{
+	OnPlayerPossession.Broadcast(NewController);
+}
+
 uint8 AKobWarCharacter::GetCharacterTeamId()
 {
 	return GenericTeamId;
@@ -436,12 +452,14 @@ FVector2D AKobWarCharacter::GetCurrentMovementInput()
 	float xVal = GetInputAxisValue("MoveForward");
 	float yVal = GetInputAxisValue("MoveRight");
 	FVector2D vector = FVector2D(xVal, yVal);
+	float magnitude = vector.Size();
+
 	vector.Normalize();
 
 	float dir = FMath::Atan2(vector.Y, vector.X); // relative angle in radians
 	dir = FMath::RadiansToDegrees(dir);	// radians to degrees
 
-	return FVector2D(dir, vector.Size());
+	return FVector2D(dir, magnitude);
 }
 
 FVector2D AKobWarCharacter::GetCurrentViewInput()

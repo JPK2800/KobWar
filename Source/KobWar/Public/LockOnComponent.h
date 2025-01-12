@@ -28,6 +28,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FLockedOn OnLockedOn;
 
+	UFUNCTION()
+	void OnPlayerPossessed(APlayerController* Controller);
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

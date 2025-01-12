@@ -22,25 +22,31 @@ void ULockOnComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	OwnerCharacter = Cast<AKobWarCharacter>(GetOwner());
+	if (OwnerCharacter)
+	{
+		OwnerCharacter->OnPlayerPossession.AddDynamic(this, &ULockOnComponent::OnPlayerPossessed);
+	}
+}
+
+void ULockOnComponent::OnPlayerPossessed(APlayerController* Controller)
+{
 	InitOwnerLink();
 }
 
 void ULockOnComponent::InitOwnerLink()
 {
-	auto* owner = GetOwner();
-
-	OwnerCharacter = Cast<AKobWarCharacter>(owner);
 	if (OwnerCharacter)
 	{
-		OwnerCamComponent = OwnerCharacter->GetFollowCamera();
-		DefaultCamRotationRelative = OwnerCamComponent->GetRelativeRotation();
-		OwnerSpringArmComponent = OwnerCharacter->GetCameraBoom();
-
-		OwnerCharacter->OnLookDir.AddDynamic(this, &ULockOnComponent::LockOnMoveDir);
-		OwnerCharacter->OnLockOnButton.AddDynamic(this, &ULockOnComponent::LockOnPress);
-
 		if (OwnerCharacter->IsLocallyControlled() && OwnerCharacter->IsPlayerControlled())
 		{
+			OwnerCamComponent = OwnerCharacter->GetFollowCamera();
+			DefaultCamRotationRelative = OwnerCamComponent->GetRelativeRotation();
+			OwnerSpringArmComponent = OwnerCharacter->GetCameraBoom();
+
+			OwnerCharacter->OnLookDir.AddDynamic(this, &ULockOnComponent::LockOnMoveDir);
+			OwnerCharacter->OnLockOnButton.AddDynamic(this, &ULockOnComponent::LockOnPress);
+		
 			OwnerPlayerController = Cast<AGamePlayerController>(OwnerCharacter->GetController());
 		}
 	}

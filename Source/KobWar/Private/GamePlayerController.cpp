@@ -7,26 +7,26 @@ void AGamePlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	InputComponent->BindAction("MenuConfirm", IE_Pressed, this, &AGamePlayerController::MenuConfirmPressed);
-	InputComponent->BindAction("MenuConfirm", IE_Released, this, &AGamePlayerController::MenuConfirmReleased);
+	InputComponent->BindAction("MenuConfirm", IE_Pressed, this, &AGamePlayerController::MenuConfirmPressed).bConsumeInput = false;
+	InputComponent->BindAction("MenuConfirm", IE_Released, this, &AGamePlayerController::MenuConfirmReleased).bConsumeInput = false;
 
-	InputComponent->BindAction("MenuBack", IE_Pressed, this, &AGamePlayerController::MenuBackPressed);
-	InputComponent->BindAction("MenuBack", IE_Released, this, &AGamePlayerController::MenuBackReleased);
+	InputComponent->BindAction("MenuBack", IE_Pressed, this, &AGamePlayerController::MenuBackPressed).bConsumeInput = false;
+	InputComponent->BindAction("MenuBack", IE_Released, this, &AGamePlayerController::MenuBackReleased).bConsumeInput = false;
 
-	InputComponent->BindAction("MenuUp", IE_Pressed, this, &AGamePlayerController::MenuUpPressed);
-	InputComponent->BindAction("MenuUp", IE_Released, this, &AGamePlayerController::MenuUpReleased);
-	InputComponent->BindAction("MenuDown", IE_Pressed, this, &AGamePlayerController::MenuDownPressed);
-	InputComponent->BindAction("MenuDown", IE_Released, this, &AGamePlayerController::MenuDownReleased);
-	InputComponent->BindAction("MenuLeft", IE_Pressed, this, &AGamePlayerController::MenuLeftPressed);
-	InputComponent->BindAction("MenuLeft", IE_Released, this, &AGamePlayerController::MenuLeftReleased);
-	InputComponent->BindAction("MenuRight", IE_Pressed, this, &AGamePlayerController::MenuRightPressed);
-	InputComponent->BindAction("MenuRight", IE_Released, this, &AGamePlayerController::MenuRightReleased);
+	InputComponent->BindAction("MenuUp", IE_Pressed, this, &AGamePlayerController::MenuUpPressed).bConsumeInput = false;
+	InputComponent->BindAction("MenuUp", IE_Released, this, &AGamePlayerController::MenuUpReleased).bConsumeInput = false;
+	InputComponent->BindAction("MenuDown", IE_Pressed, this, &AGamePlayerController::MenuDownPressed).bConsumeInput = false;
+	InputComponent->BindAction("MenuDown", IE_Released, this, &AGamePlayerController::MenuDownReleased).bConsumeInput = false;
+	InputComponent->BindAction("MenuLeft", IE_Pressed, this, &AGamePlayerController::MenuLeftPressed).bConsumeInput = false;
+	InputComponent->BindAction("MenuLeft", IE_Released, this, &AGamePlayerController::MenuLeftReleased).bConsumeInput = false;
+	InputComponent->BindAction("MenuRight", IE_Pressed, this, &AGamePlayerController::MenuRightPressed).bConsumeInput = false;
+	InputComponent->BindAction("MenuRight", IE_Released, this, &AGamePlayerController::MenuRightReleased).bConsumeInput = false;
 
-	InputComponent->BindAction("MenuMisc1", IE_Pressed, this, &AGamePlayerController::MenuMisc1Pressed);
-	InputComponent->BindAction("MenuMisc1", IE_Released, this, &AGamePlayerController::MenuMisc1Released);
+	InputComponent->BindAction("MenuMisc1", IE_Pressed, this, &AGamePlayerController::MenuMisc1Pressed).bConsumeInput = false;
+	InputComponent->BindAction("MenuMisc1", IE_Released, this, &AGamePlayerController::MenuMisc1Released).bConsumeInput = false;
 
-	InputComponent->BindAction("MenuMisc2", IE_Pressed, this, &AGamePlayerController::MenuMisc2Pressed);
-	InputComponent->BindAction("MenuMisc2", IE_Released, this, &AGamePlayerController::MenuMisc2Released);
+	InputComponent->BindAction("MenuMisc2", IE_Pressed, this, &AGamePlayerController::MenuMisc2Pressed).bConsumeInput = false;
+	InputComponent->BindAction("MenuMisc2", IE_Released, this, &AGamePlayerController::MenuMisc2Released).bConsumeInput = false;
 }
 
 void AGamePlayerController::MenuConfirmPressed()

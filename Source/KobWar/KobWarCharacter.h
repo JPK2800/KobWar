@@ -25,6 +25,13 @@ enum ECharacterState
 	Falling = 3			UMETA(DisplayName = "Falling"),
 };
 
+#pragma region Possession Delegate Declarations
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerPossession, APlayerController*, PlayerController);
+
+#pragma endregion
+
+
 #pragma region Input Delegate Declarations
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FConfirmButton, bool, Press, bool, Release);
@@ -106,6 +113,14 @@ protected:
 
 public:
 
+#pragma region Possession Events
+
+	UPROPERTY(BlueprintAssignable)
+	FPlayerPossession OnPlayerPossession;
+
+#pragma endregion
+
+
 #pragma region State Change Events
 
 	UPROPERTY(BlueprintAssignable)
@@ -168,6 +183,16 @@ public:
 	AKobWarCharacter(const FObjectInitializer& ObjectInitializer);
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+#pragma region Possession
+
+	virtual void PossessedBy(AController* NewController) override;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastPossessedByPlayer(APlayerController* NewController);
+
+#pragma endregion
+
 
 #pragma region Teams
 
