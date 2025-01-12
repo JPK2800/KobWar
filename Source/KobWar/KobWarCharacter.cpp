@@ -9,12 +9,16 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "ActionControlComponent.h"
+#include <Runtime/Engine/Public/Net/UnrealNetwork.h>
+
 
 //////////////////////////////////////////////////////////////////////////
 // AKobWarCharacter
 
 AKobWarCharacter::AKobWarCharacter(const FObjectInitializer& ObjectInitializer) : AClientAuthoritativeCharacter(ObjectInitializer)
 {
+	SetReplicates(true);
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -49,6 +53,50 @@ AKobWarCharacter::AKobWarCharacter(const FObjectInitializer& ObjectInitializer) 
 
 	LockOnTargetComponent = CreateDefaultSubobject<ULockOnTargSceneComponent>(TEXT("LockOnTargetComponent"));
 	LockOnTargetComponent->SetupAttachment(RootComponent);
+
+}
+
+void AKobWarCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	FDoRepLifetimeParams sharedParams_SkipOwner;
+	sharedParams_SkipOwner.bIsPushBased = true;
+	sharedParams_SkipOwner.Condition = COND_SkipOwner;
+
+	FDoRepLifetimeParams sharedParams_NoCond;
+	sharedParams_NoCond.bIsPushBased = true;
+	sharedParams_NoCond.Condition = COND_None;
+
+	DOREPLIFETIME_WITH_PARAMS(AKobWarCharacter, GenericTeamId, sharedParams_NoCond);
+}
+
+uint8 AKobWarCharacter::GetCharacterTeamId()
+{
+	return GenericTeamId;
+}
+
+void AKobWarCharacter::SetTeamId(const uint8 NewTeamId)
+{
+	if (IsLocallyControlled())
+	{
+		ServerSetTeamId(NewTeamId);
+	}
+}
+
+void AKobWarCharacter::SetLocalTeamId(const uint8 TeamID)
+{
+	GenericTeamId = FGenericTeamId(TeamID);
+	OnSetTeam.Broadcast(TeamID);
+}
+
+void AKobWarCharacter::OnRep_TeamUpdate()
+{
+	SetLocalTeamId(GenericTeamId);
+}
+
+void AKobWarCharacter::ServerSetTeamId_Implementation(const uint8 NewTeamId)
+{
+	SetLocalTeamId(NewTeamId);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -150,108 +198,169 @@ void AKobWarCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 
 void AKobWarCharacter::TurnAtRate(float Rate)
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
 void AKobWarCharacter::LookUpAtRate(float Rate)
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
 void AKobWarCharacter::DodgePressed()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnDodgeButton.Broadcast(true, false);
 }
 
 void AKobWarCharacter::DodgeReleased()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnDodgeButton.Broadcast(false, true);
 }
 
 void AKobWarCharacter::ConfirmPressed()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnConfirmButton.Broadcast(true, false);
 }
 
 void AKobWarCharacter::ConfirmReleased()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnConfirmButton.Broadcast(false, true);
 }
 
 void AKobWarCharacter::SelectPressed()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnSelectButton.Broadcast(true, false);
 }
 
 void AKobWarCharacter::SelectReleased()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnSelectButton.Broadcast(false, true);
 }
 
 void AKobWarCharacter::BackPressed()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnBackButton.Broadcast(true, false);
 }
 
 void AKobWarCharacter::BackReleased()
 {
-	OnBackButton.Broadcast(false, true);
+	if (AreInputsPausedForMenu)
+		return;
 
+	OnBackButton.Broadcast(false, true);
 }
 
 void AKobWarCharacter::MenuPressed()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnMenuButton.Broadcast(true, false);
 }
 
 void AKobWarCharacter::MenuReleased()
 {
-	OnMenuButton.Broadcast(false, true);
+	if (AreInputsPausedForMenu)
+		return;
 
+	OnMenuButton.Broadcast(false, true);
 }
 
 void AKobWarCharacter::LockOnPressed()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnLockOnButton.Broadcast(true, false);
 }
 
 void AKobWarCharacter::LockOnReleased()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnLockOnButton.Broadcast(false, true);
 }
 
 void AKobWarCharacter::AttackLightPressed()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnAttackLightButton.Broadcast(true, false);
 }
 
 void AKobWarCharacter::AttackLightReleased()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnAttackLightButton.Broadcast(false, true);
 }
 
 void AKobWarCharacter::AttackHeavyPressed()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnAttackHeavyButton.Broadcast(true, false);
 }
 
 void AKobWarCharacter::AttackHeavyReleased()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnAttackHeavyButton.Broadcast(false, true);
 }
 
 void AKobWarCharacter::BlockPressed()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnBlockButton.Broadcast(true, false);
 }
 
 void AKobWarCharacter::BlockReleased()
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	OnBlockButton.Broadcast(false, true);
 }
 
 void AKobWarCharacter::ViewHorizontalMouse(float Value)
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	FVector2D normalizedInput;
 	float magnitude = 0.0f;
 	LookDirUpdated(normalizedInput, magnitude);
@@ -265,6 +374,9 @@ void AKobWarCharacter::ViewHorizontalMouse(float Value)
 
 void AKobWarCharacter::ViewVerticalMouse(float Value)
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	FVector2D normalizedInput;
 	float magnitude = 0.0f;
 	LookDirUpdated(normalizedInput, magnitude);
@@ -277,6 +389,9 @@ void AKobWarCharacter::ViewVerticalMouse(float Value)
 
 void AKobWarCharacter::ViewHorizontalController(float Value)
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	FVector2D normalizedInput;
 	float magnitude = 0.0f;
 	LookDirUpdated(normalizedInput, magnitude);
@@ -290,6 +405,9 @@ void AKobWarCharacter::ViewHorizontalController(float Value)
 
 void AKobWarCharacter::ViewVerticalController(float Value)
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	FVector2D normalizedInput;
 	float magnitude = 0.0f;
 	LookDirUpdated(normalizedInput, magnitude);
@@ -348,8 +466,16 @@ FVector2D AKobWarCharacter::GetActorDirectionalVelocity()
 	return FVector2D(ForwardVelocity, RightVelocity);
 }
 
+void AKobWarCharacter::SetPausedInputsForMenu(bool Pause)
+{
+	AreInputsPausedForMenu = Pause;
+}
+
 void AKobWarCharacter::MoveForward(float Value)
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	if ((Controller != nullptr) && (Value != 0.0f))
 	{
 		// find out which way is forward
@@ -364,6 +490,9 @@ void AKobWarCharacter::MoveForward(float Value)
 
 void AKobWarCharacter::MoveRight(float Value)
 {
+	if (AreInputsPausedForMenu)
+		return;
+
 	if ( (Controller != nullptr) && (Value != 0.0f) )
 	{
 		// find out which way is right

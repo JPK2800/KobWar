@@ -7,9 +7,14 @@
 #include "ClientAuthoritativeCharacter.h"
 #include "LockOnTargSceneComponent.h"
 #include "LockOnComponent.h"
+#include "GenericTeamAgentInterface.h"
 #include "KobWarCharacter.generated.h"
 
+#pragma region Forward Declarations
+
 class UActionControlComponent;
+
+#pragma endregion
 
 UENUM(BlueprintType)
 enum ECharacterState
@@ -44,6 +49,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBeginFalling);
 
 
 #pragma endregion
+
+#pragma region Team Delegate Declarations
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSetTeam, uint8, NewTeam);
+
+
+#pragma endregion
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FStateChange, TEnumAsByte<ECharacterState>, NewState, TEnumAsByte<ECharacterState>, OldState);
 
@@ -83,9 +96,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LockOnCamMoveThreshold = 0.8f;
 #pragma endregion
-	
+
+#pragma region Menus
+
+	bool AreInputsPausedForMenu = false;
+
+#pragma endregion
+
 
 public:
+
+#pragma region State Change Events
 
 	UPROPERTY(BlueprintAssignable)
 	FStateChange OnStateChange;
@@ -95,6 +116,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FBeginLanding OnBeginLanding;
+
+#pragma endregion
 
 #pragma region Input Delegates
 
@@ -133,8 +156,39 @@ public:
 
 #pragma endregion
 
+#pragma region Team Events
+
+	UPROPERTY(BlueprintAssignable)
+	FSetTeam OnSetTeam;
+
+#pragma endregion
+
+
 public:
 	AKobWarCharacter(const FObjectInitializer& ObjectInitializer);
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+#pragma region Teams
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, ReplicatedUsing = OnRep_TeamUpdate)
+	uint8 GenericTeamId = 0;
+
+	UFUNCTION(BlueprintCallable)
+	uint8 GetCharacterTeamId();
+	
+	UFUNCTION(BlueprintCallable)
+	void SetTeamId(const uint8 NewTeamId);
+
+	virtual void SetLocalTeamId(const uint8 TeamID);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetTeamId(const uint8 NewTeamId);
+
+	UFUNCTION()
+	void OnRep_TeamUpdate();
+
+#pragma endregion
 
 	/* Base walking speed */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
@@ -156,6 +210,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 	
+
 
 protected:
 
@@ -272,9 +327,13 @@ protected:
 
 #pragma endregion
 
+#pragma region Movement
+
 	/* Updates the character speed based on all current data */
 	UFUNCTION(BlueprintCallable)
 	void UpdateSpeed();
+
+#pragma endregion
 
 public:
 
@@ -292,9 +351,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FVector2D GetActorDirectionalVelocity();
 
+	UFUNCTION(BlueprintCallable)
+	void SetPausedInputsForMenu(bool Pause);
+
 #pragma endregion
 	
-
 #pragma region States
 
 	void Falling() override;

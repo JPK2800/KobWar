@@ -13,3 +13,76 @@ AKobWarGameMode::AKobWarGameMode()
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 }
+
+void AKobWarGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+	PlayerControllers.Add(NewPlayer);
+
+	OnPlayerConnect.Broadcast(NewPlayer);
+}
+
+void AKobWarGameMode::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+
+	auto* playerController = Cast<APlayerController>(Exiting);
+	if (playerController)
+	{
+		if (PlayerControllers.Contains(playerController))
+			PlayerControllers.Remove(playerController);
+		if (PlayerControllers_Team1.Contains(playerController))
+			PlayerControllers_Team1.Remove(playerController);
+		if (PlayerControllers_Team2.Contains(playerController))
+			PlayerControllers_Team2.Remove(playerController);
+	}
+
+	OnPlayerDisconnect.Broadcast(Exiting);
+}
+
+FString AKobWarGameMode::InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal)
+{
+	return Super::InitNewPlayer(NewPlayerController, UniqueId, Options, Portal);
+}
+
+bool AKobWarGameMode::SetPlayerTeam(APlayerController* Player, uint8 Team, bool ForceSwitch = false)
+{
+
+	if (PlayerControllers.Num() == 0)
+	{
+		return false;
+	}
+
+	switch (Team)
+	{
+	case (1):
+
+		if (PlayerControllers_Team1.Num() == 0)
+			return true;
+
+		if ((float)(PlayerControllers_Team1.Num() + 1) / (PlayerControllers.Num()) <= TeamRatio || ForceSwitch)
+		{
+			if (PlayerControllers_Team2.Contains(Player))
+				PlayerControllers_Team2.Remove(Player);
+			PlayerControllers_Team1.Add(Player);
+			return true;
+		}
+		return false;
+
+	case (2):
+
+		if (PlayerControllers_Team2.Num() == 0)
+			return true;
+
+		if ((float)(PlayerControllers_Team2.Num() + 1) / (PlayerControllers.Num()) <= (1 - TeamRatio) || ForceSwitch)
+		{
+			if (PlayerControllers_Team1.Contains(Player))
+				PlayerControllers_Team1.Remove(Player);
+			PlayerControllers_Team2.Add(Player);
+			return true;
+		}
+		return false;
+	}
+	return false;
+}
