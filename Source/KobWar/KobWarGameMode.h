@@ -52,7 +52,7 @@ public:
 	virtual FString InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal) override;
 
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 	bool SetPlayerTeam(APlayerController* Player, uint8 Team, bool ForceSwitch);
 
 	UPROPERTY(BlueprintAssignable)
@@ -137,17 +137,50 @@ public:
 
 #pragma endregion
 
+public:
+
 #pragma region GameStart
 
 	// Time until a new game starts
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GameStart")
-	float PreGameWaitTime = 90.0f;
+	float PreGameWaitTime = 60.0f;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GameStart")
 	FTimerHandle PreGameTimer;
 
+protected:
+
+	void InitGameStartTimer();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void TriggerGameStartEvent();
+
 #pragma endregion
 
+public:
+
+
+#pragma region Respawn
+
+	// time for a player to respawn
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Respawn")
+	float RespawnTime = 10.0f;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Respawn")
+	TArray<AGamePlayerController*> RespawnQueue = TArray<AGamePlayerController*>();
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Respawn")
+	FTimerHandle RespawnTimer;
+
+	UFUNCTION(BlueprintCallable)
+	bool AddToRespawnQueue(AGamePlayerController* Controller);
+
+protected:
+
+	void InitRespawnTimer();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void TriggerRespawnEvent();
 
 };
 
