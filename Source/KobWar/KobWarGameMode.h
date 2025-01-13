@@ -38,7 +38,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerDisconnect, AController*, Qui
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPlayerSetToTeam, APlayerController*, Player, uint8, TeamId);
 
 
-UCLASS(minimalapi)
+UCLASS(Blueprintable)
 class AKobWarGameMode : public AGameMode
 {
 	GENERATED_BODY()
@@ -46,6 +46,8 @@ class AKobWarGameMode : public AGameMode
 
 public:
 	AKobWarGameMode();
+
+	virtual void BeginPlay() override;
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
@@ -148,17 +150,15 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GameStart")
 	FTimerHandle PreGameTimer;
 
-protected:
-
-	void InitGameStartTimer();
-
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void TriggerGameStartEvent();
+
+	UFUNCTION()
+	void InitGameStartTimer();
 
 #pragma endregion
 
 public:
-
 
 #pragma region Respawn
 
@@ -175,12 +175,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool AddToRespawnQueue(AGamePlayerController* Controller);
 
-protected:
-
+	UFUNCTION(BlueprintCallable)
 	void InitRespawnTimer();
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void TriggerRespawnEvent();
+
+#pragma endregion
 
 };
 

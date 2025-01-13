@@ -14,6 +14,14 @@ AKobWarGameMode::AKobWarGameMode()
 	}
 }
 
+void AKobWarGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	InitGameStartTimer();
+
+}
+
 void AKobWarGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);

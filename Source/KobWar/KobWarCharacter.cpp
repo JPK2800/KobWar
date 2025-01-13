@@ -17,7 +17,7 @@
 
 AKobWarCharacter::AKobWarCharacter(const FObjectInitializer& ObjectInitializer) : AClientAuthoritativeCharacter(ObjectInitializer)
 {
-	SetReplicates(true);
+	bReplicates = true;
 
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
