@@ -59,27 +59,34 @@ bool AKobWarGameMode::SetPlayerTeam(APlayerController* Player, uint8 Team, bool 
 	case (1):
 
 		if (PlayerControllers_Team1.Num() == 0)
+		{
+			OnPlayerSetToTeam.Broadcast(Player, Team);
 			return true;
+		}
 
 		if ((float)(PlayerControllers_Team1.Num() + 1) / (PlayerControllers.Num()) <= TeamRatio || ForceSwitch)
 		{
 			if (PlayerControllers_Team2.Contains(Player))
 				PlayerControllers_Team2.Remove(Player);
 			PlayerControllers_Team1.Add(Player);
+			OnPlayerSetToTeam.Broadcast(Player, Team);
 			return true;
 		}
 		return false;
 
 	case (2):
 
-		if (PlayerControllers_Team2.Num() == 0)
+		if (PlayerControllers_Team2.Num() == 0) {
+			OnPlayerSetToTeam.Broadcast(Player, Team);
 			return true;
+		}
 
 		if ((float)(PlayerControllers_Team2.Num() + 1) / (PlayerControllers.Num()) <= (1 - TeamRatio) || ForceSwitch)
 		{
 			if (PlayerControllers_Team1.Contains(Player))
 				PlayerControllers_Team1.Remove(Player);
 			PlayerControllers_Team2.Add(Player);
+			OnPlayerSetToTeam.Broadcast(Player, Team);
 			return true;
 		}
 		return false;

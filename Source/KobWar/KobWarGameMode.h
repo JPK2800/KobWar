@@ -64,14 +64,17 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FPlayerSetToTeam OnPlayerSetToTeam;
 
-private:
+public:
 
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	TArray<APlayerController*> PlayerControllers = TArray<APlayerController*>();
 
 	// Only set in team-based modes
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	TArray<APlayerController*> PlayerControllers_Team1 = TArray<APlayerController*>();
 
 	// Only set in team-based modes
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	TArray<APlayerController*> PlayerControllers_Team2 = TArray<APlayerController*>();
 
 
@@ -139,6 +142,9 @@ public:
 	// Time until a new game starts
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GameStart")
 	float PreGameWaitTime = 90.0f;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GameStart")
+	FTimerHandle PreGameTimer;
 
 #pragma endregion
 
