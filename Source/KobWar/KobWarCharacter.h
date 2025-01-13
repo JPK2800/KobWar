@@ -196,7 +196,7 @@ public:
 
 #pragma region Teams
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, ReplicatedUsing = OnRep_TeamUpdate)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, ReplicatedUsing = OnRep_TeamUpdate, Meta = (ExposeOnSpawn = true))
 	uint8 GenericTeamId = 0;
 
 	UFUNCTION(BlueprintCallable)
