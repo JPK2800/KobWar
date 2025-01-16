@@ -26,25 +26,12 @@ void AKobWarGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	PlayerControllers.Add(NewPlayer);
-
 	OnPlayerConnect.Broadcast(NewPlayer);
 }
 
 void AKobWarGameMode::Logout(AController* Exiting)
 {
 	Super::Logout(Exiting);
-
-	auto* playerController = Cast<APlayerController>(Exiting);
-	if (playerController)
-	{
-		if (PlayerControllers.Contains(playerController))
-			PlayerControllers.Remove(playerController);
-		if (PlayerControllers_Team1.Contains(playerController))
-			PlayerControllers_Team1.Remove(playerController);
-		if (PlayerControllers_Team2.Contains(playerController))
-			PlayerControllers_Team2.Remove(playerController);
-	}
 
 	OnPlayerDisconnect.Broadcast(Exiting);
 }
@@ -61,7 +48,8 @@ void AKobWarGameMode::InitGameStartTimer()
 
 bool AKobWarGameMode::AddToRespawnQueue(AGamePlayerController* Controller)
 {
-	return RespawnQueue.Add(Controller) != -1;
+	RespawnQueue.Add(Controller);
+	return true;
 }
 
 void AKobWarGameMode::InitRespawnTimer()

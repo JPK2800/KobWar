@@ -68,20 +68,6 @@ public:
 
 public:
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-	TArray<APlayerController*> PlayerControllers = TArray<APlayerController*>();
-
-	// Only set in team-based modes
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-	TArray<APlayerController*> PlayerControllers_Team1 = TArray<APlayerController*>();
-
-	// Only set in team-based modes
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-	TArray<APlayerController*> PlayerControllers_Team2 = TArray<APlayerController*>();
-
-
-public:
-
 #pragma region Player Count
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "PlayerCount")

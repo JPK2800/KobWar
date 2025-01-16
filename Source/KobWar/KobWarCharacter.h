@@ -37,12 +37,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerPossession, APlayerController
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FConfirmButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBackButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMenuButton, bool, Press, bool, Release);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSelectButton, bool, Press, bool, Release);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FScoreboardButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FLockOnButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAttackLightButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAttackHeavyButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDodgeButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBlockButton, bool, Press, bool, Release);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FInteractButton, bool, Press, bool, Release);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FUseItemButton, bool, Press, bool, Release);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FLookDir, FVector2D, Direction, float, Value);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMoveDir, FVector2D, Direction, float, Value);
@@ -146,7 +148,7 @@ public:
 	FMenuButton OnMenuButton;
 
 	UPROPERTY(BlueprintAssignable)
-	FSelectButton OnSelectButton;
+	FScoreboardButton OnScoreboardButton;
 
 	UPROPERTY(BlueprintAssignable)
 	FLockOnButton OnLockOnButton;
@@ -162,6 +164,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FBlockButton OnBlockButton;
+
+	UPROPERTY(BlueprintAssignable)
+	FInteractButton OnInteractButton;
+
+	UPROPERTY(BlueprintAssignable)
+	FUseItemButton OnUseItemButton;
 
 	UPROPERTY(BlueprintAssignable)
 	FLookDir OnLookDir;
@@ -277,11 +285,11 @@ protected:
 
 	/* Called when select is pressed */
 	UFUNCTION()
-	void SelectPressed();
+	void ScoreboardPressed();
 
 	/* Called when select is released */
 	UFUNCTION()
-	void SelectReleased();
+	void ScoreboardReleased();
 
 	/* Called when back is pressed */
 	UFUNCTION()
@@ -330,6 +338,22 @@ protected:
 	/* Called when block is released */
 	UFUNCTION()
 	void BlockReleased();
+
+	/* Called when Interact is pressed */
+	UFUNCTION()
+	void InteractPressed();
+
+	/* Called when Interact is released */
+	UFUNCTION()
+	void InteractReleased();
+
+	/* Called when UseItem is pressed */
+	UFUNCTION()
+	void UseItemPressed();
+
+	/* Called when UseItem is released */
+	UFUNCTION()
+	void UseItemReleased();
 
 	/* Called when the view is moved horizontally */
 	UFUNCTION()

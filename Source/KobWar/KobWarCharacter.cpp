@@ -205,8 +205,8 @@ void AKobWarCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	PlayerInputComponent->BindAction("Menu", IE_Pressed, this, &AKobWarCharacter::MenuPressed);
 	PlayerInputComponent->BindAction("Menu", IE_Released, this, &AKobWarCharacter::MenuReleased);
 
-	PlayerInputComponent->BindAction("Select", IE_Pressed, this, &AKobWarCharacter::SelectPressed);
-	PlayerInputComponent->BindAction("Select", IE_Released, this, &AKobWarCharacter::SelectReleased);
+	PlayerInputComponent->BindAction("Scoreboard", IE_Pressed, this, &AKobWarCharacter::ScoreboardPressed);
+	PlayerInputComponent->BindAction("Scoreboard", IE_Released, this, &AKobWarCharacter::ScoreboardReleased);
 
 	PlayerInputComponent->BindAction("LockOn", IE_Pressed, this, &AKobWarCharacter::LockOnPressed);
 	PlayerInputComponent->BindAction("LockOn", IE_Released, this, &AKobWarCharacter::LockOnReleased);
@@ -260,20 +260,20 @@ void AKobWarCharacter::ConfirmReleased()
 	OnConfirmButton.Broadcast(false, true);
 }
 
-void AKobWarCharacter::SelectPressed()
+void AKobWarCharacter::ScoreboardPressed()
 {
 	if (AreInputsPausedForMenu)
 		return;
 
-	OnSelectButton.Broadcast(true, false);
+	OnScoreboardButton.Broadcast(true, false);
 }
 
-void AKobWarCharacter::SelectReleased()
+void AKobWarCharacter::ScoreboardReleased()
 {
 	if (AreInputsPausedForMenu)
 		return;
 
-	OnSelectButton.Broadcast(false, true);
+	OnScoreboardButton.Broadcast(false, true);
 }
 
 void AKobWarCharacter::BackPressed()
@@ -370,6 +370,38 @@ void AKobWarCharacter::BlockReleased()
 		return;
 
 	OnBlockButton.Broadcast(false, true);
+}
+
+void AKobWarCharacter::InteractPressed()
+{
+	if (AreInputsPausedForMenu)
+		return;
+
+	OnInteractButton.Broadcast(true, false);
+}
+
+void AKobWarCharacter::InteractReleased()
+{
+	if (AreInputsPausedForMenu)
+		return;
+
+	OnInteractButton.Broadcast(false, true);
+}
+
+void AKobWarCharacter::UseItemPressed()
+{
+	if (AreInputsPausedForMenu)
+		return;
+
+	OnUseItemButton.Broadcast(false, true);
+}
+
+void AKobWarCharacter::UseItemReleased()
+{
+	if (AreInputsPausedForMenu)
+		return;
+
+	OnUseItemButton.Broadcast(true, false);
 }
 
 void AKobWarCharacter::ViewHorizontalMouse(float Value)
