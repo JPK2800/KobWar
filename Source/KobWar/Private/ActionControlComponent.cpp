@@ -110,6 +110,9 @@ void UActionControlComponent::ActivateAction(EQueueActions QueuedAction)
 		case (EQueueActions::WeaponSkill):
 			TriggerWeaponSkillAction();
 			break;
+		case (EQueueActions::RunningAttack):
+			TriggerRunningAttack();
+			break;
 		default:
 			return;
 	}
@@ -145,6 +148,12 @@ bool UActionControlComponent::TriggerWeaponSkillAction()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerWeaponSkillAction"));
 	return TriggerActionLogic(WeaponSkillAction);
+}
+
+bool UActionControlComponent::TriggerRunningAttack()
+{
+	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerRunningAttack"));
+	return TriggerActionLogic(RunningAttack);;
 }
 
 bool UActionControlComponent::TriggerBackstepAction()
@@ -344,7 +353,15 @@ void UActionControlComponent::ActivateOrQueueLightAttack(bool Press, bool Releas
 	if (Press)
 	{
 		IsLightHeld = true;
-		ActivateOrQueueAction(EQueueActions::LightAttack);
+
+		if (OwnerCharacter && (OwnerCharacter->IsRunning || CurrentAction.IsEqual(BackstepAction.ActionName)))
+		{
+			ActivateOrQueueAction(EQueueActions::RunningAttack);
+		}
+		else
+		{
+			ActivateOrQueueAction(EQueueActions::LightAttack);
+		}
 	}
 
 	if (Release)

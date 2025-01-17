@@ -20,6 +20,7 @@ enum EQueueActions
 	Dodge = 3				UMETA(DisplayName = "Dodge"),
 	Backstep = 4			UMETA(DisplayName = "Backstep"),
 	WeaponSkill = 5			UMETA(DisplayName = "WeaponSkill"),
+	RunningAttack = 6		UMETA(DisplayName = "RunningAttack"),
 };
 
 USTRUCT(BlueprintType)
@@ -174,6 +175,8 @@ protected:
 
 	bool TriggerWeaponSkillAction();
 
+	bool TriggerRunningAttack();
+
 	bool TriggerBackstepAction();
 
 	bool TriggerStaggerAction();
@@ -302,6 +305,9 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct WeaponSkillAction;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	FActionDataStruct RunningAttack;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct BackstepAction;
