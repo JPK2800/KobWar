@@ -210,6 +210,9 @@ void AKobWarCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 
 	PlayerInputComponent->BindAction("LockOn", IE_Pressed, this, &AKobWarCharacter::LockOnPressed);
 	PlayerInputComponent->BindAction("LockOn", IE_Released, this, &AKobWarCharacter::LockOnReleased);
+
+	PlayerInputComponent->BindAction("WeaponSkill", IE_Pressed, this, &AKobWarCharacter::WeaponSkillPressed);
+	PlayerInputComponent->BindAction("WeaponSkill", IE_Released, this, &AKobWarCharacter::WeaponSkillReleased);
 }
 
 void AKobWarCharacter::TurnAtRate(float Rate)
@@ -402,6 +405,22 @@ void AKobWarCharacter::UseItemReleased()
 		return;
 
 	OnUseItemButton.Broadcast(true, false);
+}
+
+void AKobWarCharacter::WeaponSkillPressed()
+{
+	if (AreInputsPausedForMenu)
+		return;
+
+	OnWeaponSkill.Broadcast(true, false);
+}
+
+void AKobWarCharacter::WeaponSkillReleased()
+{
+	if (AreInputsPausedForMenu)
+		return;
+
+	OnWeaponSkill.Broadcast(false, true);
 }
 
 void AKobWarCharacter::ViewHorizontalMouse(float Value)

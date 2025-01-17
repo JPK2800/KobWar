@@ -19,6 +19,7 @@ enum EQueueActions
 	HeavyAttack = 2			UMETA(DisplayName = "HeavyAttack"),
 	Dodge = 3				UMETA(DisplayName = "Dodge"),
 	Backstep = 4			UMETA(DisplayName = "Backstep"),
+	WeaponSkill = 5			UMETA(DisplayName = "WeaponSkill"),
 };
 
 USTRUCT(BlueprintType)
@@ -171,6 +172,8 @@ protected:
 
 	bool TriggerDodgeAction();
 
+	bool TriggerWeaponSkillAction();
+
 	bool TriggerBackstepAction();
 
 	bool TriggerStaggerAction();
@@ -207,6 +210,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	void ActivateOrQueueDodge(bool Press, bool Release);
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	void ActivateOrQueueWeaponSkill(bool Press, bool Release);
 
 	UFUNCTION()
 	void Landing();
@@ -279,6 +285,10 @@ protected:
 
 	bool IsDodgeCharging = false;
 
+	bool IsWeaponSkillHeld = false;
+
+	bool IsWeaponSkillCharging = false;
+
 	FTimerHandle DodgeThresholdTimer;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
@@ -289,6 +299,9 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct DodgeAction;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	FActionDataStruct WeaponSkillAction;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct BackstepAction;

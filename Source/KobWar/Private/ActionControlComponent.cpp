@@ -34,6 +34,8 @@ void UActionControlComponent::InitOwnerLink()
 		OwnerCharacter->OnAttackLightButton.AddDynamic(this, &UActionControlComponent::ActivateOrQueueLightAttack);
 		OwnerCharacter->OnAttackHeavyButton.AddDynamic(this, &UActionControlComponent::ActivateOrQueueHeavyAttack);
 		OwnerCharacter->OnDodgeButton.AddDynamic(this, &UActionControlComponent::ActivateOrQueueDodge);
+		OwnerCharacter->OnWeaponSkill.AddDynamic(this, &UActionControlComponent::ActivateOrQueueWeaponSkill);
+
 	}
 }
 
@@ -105,6 +107,9 @@ void UActionControlComponent::ActivateAction(EQueueActions QueuedAction)
 		case (EQueueActions::Backstep):
 			TriggerBackstepAction();
 			break;
+		case (EQueueActions::WeaponSkill):
+			TriggerWeaponSkillAction();
+			break;
 		default:
 			return;
 	}
@@ -134,6 +139,12 @@ bool UActionControlComponent::TriggerDodgeAction()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerDodgeAction"));
 	return TriggerActionLogic(DodgeAction);
+}
+
+bool UActionControlComponent::TriggerWeaponSkillAction()
+{
+	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerWeaponSkillAction"));
+	return TriggerActionLogic(WeaponSkillAction);
 }
 
 bool UActionControlComponent::TriggerBackstepAction()
@@ -406,6 +417,24 @@ void UActionControlComponent::ActivateOrQueueDodge(bool Press, bool Release)
 	}
 }
 
+void UActionControlComponent::ActivateOrQueueWeaponSkill(bool Press, bool Release)
+{
+	if (Press)
+	{
+		IsWeaponSkillHeld = true;
+		ActivateOrQueueAction(EQueueActions::WeaponSkill);
+	}
+
+	if (Release)
+	{
+		IsWeaponSkillHeld = false;
+		if (CurrentAction == HeavyAttack.ActionName)
+		{
+			TriggerChargeComboCurrentAction(false, true);
+		}
+	}
+}
+
 void UActionControlComponent::Landing()
 {
 	if (OwnerCharacter)
@@ -463,6 +492,10 @@ bool UActionControlComponent::GetIsChargingAction(FName Action)
 	{
 		return IsDodgeCharging;
 	}
+	else if (WeaponSkillAction.ActionName.IsEqual(Action))
+	{
+		return IsWeaponSkillCharging;
+	}
 	return false;
 }
 
@@ -471,6 +504,7 @@ void UActionControlComponent::SetNotChargingActions()
 	IsLightCharging = false;
 	IsHeavyCharging = false;
 	IsDodgeCharging = false;
+	IsWeaponSkillCharging = false;
 }
 
 void UActionControlComponent::SetActionIsCharging(FName Action)
@@ -486,6 +520,10 @@ void UActionControlComponent::SetActionIsCharging(FName Action)
 	else if (DodgeAction.ActionName.IsEqual(Action))
 	{
 		IsDodgeCharging = true;
+	}
+	else if (WeaponSkillAction.ActionName.IsEqual(Action))
+	{
+		IsWeaponSkillCharging = true;
 	}
 }
 
@@ -506,6 +544,11 @@ bool UActionControlComponent::GetChargingAction(FActionDataStruct& Action)
 		Action = DodgeAction;
 		return true;
 	}
+	if (IsWeaponSkillCharging)
+	{
+		Action = WeaponSkillAction;
+		return true;
+	}
 	return false;
 }
 
@@ -522,6 +565,10 @@ bool UActionControlComponent::GetIsActionHeld(FName Action)
 	else if (DodgeAction.ActionName.IsEqual(Action))
 	{
 		return IsDodgeHeld;
+	}
+	else if (WeaponSkillAction.ActionName.IsEqual(Action))
+	{
+		return IsWeaponSkillHeld;
 	}
 	return false;
 }

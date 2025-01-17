@@ -45,6 +45,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDodgeButton, bool, Press, bool, Re
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBlockButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FInteractButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FUseItemButton, bool, Press, bool, Release);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponSkill, bool, Press, bool, Release);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FLookDir, FVector2D, Direction, float, Value);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMoveDir, FVector2D, Direction, float, Value);
@@ -170,6 +171,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FUseItemButton OnUseItemButton;
+
+	UPROPERTY(BlueprintAssignable)
+	FWeaponSkill OnWeaponSkill;
 
 	UPROPERTY(BlueprintAssignable)
 	FLookDir OnLookDir;
@@ -354,6 +358,14 @@ protected:
 	/* Called when UseItem is released */
 	UFUNCTION()
 	void UseItemReleased();
+
+	/* Called when weapon skill is pressed */
+	UFUNCTION()
+	void WeaponSkillPressed();
+
+	/* Called when weapon skill is released */
+	UFUNCTION()
+	void WeaponSkillReleased();
 
 	/* Called when the view is moved horizontally */
 	UFUNCTION()
