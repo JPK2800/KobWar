@@ -21,6 +21,8 @@ enum EQueueActions
 	Backstep = 4			UMETA(DisplayName = "Backstep"),
 	WeaponSkill = 5			UMETA(DisplayName = "WeaponSkill"),
 	RunningAttack = 6		UMETA(DisplayName = "RunningAttack"),
+	SpecialLight = 7		UMETA(DisplayName = "SpecialLight"),
+	SpecialHeavy = 8		UMETA(DisplayName = "SpecialHeavy"),
 };
 
 USTRUCT(BlueprintType)
@@ -187,6 +189,10 @@ protected:
 
 	bool TriggerChargeComboCurrentAction(bool ForceOnTimeout, bool IsButtonReleased);
 
+	bool TriggerSpecialLightAction();
+
+	bool TriggerSpecialHeavyAction();
+
 	void AllowComboAction();
 
 	void ActionEnd();
@@ -258,6 +264,16 @@ public:
 
 #pragma endregion
 
+#pragma region SpecialActions
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	void SetIsReadyForSpecialLightAction(bool LightActionReady);
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	void SetIsReadyForSpecialHeavyAction(bool HeavyActionHeavy);
+
+#pragma endregion
+
 
 protected:
 
@@ -323,6 +339,16 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Inputs")
 	float DodgePressReleaseThreshold = 0.20f;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	FActionDataStruct SpecialLightAction;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	FActionDataStruct SpecialHeavyAction;
+
+	bool IsSpecialLightActionReady = false;
+
+	bool IsSpecialHeavyActionReady = false;
 
 	FName CurrentAction = FName("?");
 

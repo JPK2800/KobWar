@@ -113,6 +113,12 @@ void UActionControlComponent::ActivateAction(EQueueActions QueuedAction)
 		case (EQueueActions::RunningAttack):
 			TriggerRunningAttack();
 			break;
+		case (EQueueActions::SpecialLight):
+			TriggerSpecialLightAction();
+			break;
+		case (EQueueActions::SpecialHeavy):
+			TriggerSpecialHeavyAction();
+			break;
 		default:
 			return;
 	}
@@ -285,6 +291,18 @@ bool UActionControlComponent::TriggerChargeComboCurrentAction(bool ForceOnTimeou
 	return false;
 }
 
+bool UActionControlComponent::TriggerSpecialLightAction()
+{
+	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerSpecialLightAction"));
+	return TriggerActionLogic(SpecialLightAction);
+}
+
+bool UActionControlComponent::TriggerSpecialHeavyAction()
+{
+	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerSpecialHeavyAction"));
+	return TriggerActionLogic(SpecialHeavyAction);
+}
+
 void UActionControlComponent::AllowComboAction()
 {
 	IsAllowingComboAction = true;
@@ -311,6 +329,9 @@ void UActionControlComponent::ActionEnd()
 	CurrentActionComboIndex = 0;
 	IsAllowingComboAction = false;
 	SetNotChargingActions();
+
+	IsSpecialLightActionReady = false;
+	IsSpecialHeavyActionReady = false;
 
 	CurrentAction = FName("?");
 
@@ -358,6 +379,10 @@ void UActionControlComponent::ActivateOrQueueLightAttack(bool Press, bool Releas
 		{
 			ActivateOrQueueAction(EQueueActions::RunningAttack);
 		}
+		else if (OwnerCharacter && (IsSpecialLightActionReady))
+		{
+			ActivateOrQueueAction(EQueueActions::SpecialLight);
+		}
 		else
 		{
 			ActivateOrQueueAction(EQueueActions::LightAttack);
@@ -379,7 +404,15 @@ void UActionControlComponent::ActivateOrQueueHeavyAttack(bool Press, bool Releas
 	if (Press)
 	{
 		IsHeavyHeld = true;
-		ActivateOrQueueAction(EQueueActions::HeavyAttack);
+
+		if (OwnerCharacter && (IsSpecialHeavyActionReady))
+		{
+			ActivateOrQueueAction(EQueueActions::SpecialHeavy);
+		}
+		else
+		{
+			ActivateOrQueueAction(EQueueActions::HeavyAttack);
+		}
 	}
 
 	if (Release)
@@ -588,5 +621,15 @@ bool UActionControlComponent::GetIsActionHeld(FName Action)
 		return IsWeaponSkillHeld;
 	}
 	return false;
+}
+
+void UActionControlComponent::SetIsReadyForSpecialHeavyAction(bool HeavyActionHeavy)
+{
+	IsSpecialHeavyActionReady = HeavyActionHeavy;
+}
+
+void UActionControlComponent::SetIsReadyForSpecialLightAction(bool LightActionHeavy)
+{
+	IsSpecialLightActionReady = LightActionHeavy;
 }
 
