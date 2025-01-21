@@ -245,6 +245,8 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 			OwnerCharacter->PlayActionAnimation(playAnim);
 			CurrentAction = ActionData.ActionName;
 			IsAllowingComboAction = false;
+			IsSpecialLightActionReady = false;
+			IsSpecialHeavyActionReady = false;
 			TriggerStateChange(ECharacterState::Acting);
 			if (playComboTime > 0.0f)
 			{
@@ -294,13 +296,21 @@ bool UActionControlComponent::TriggerChargeComboCurrentAction(bool ForceOnTimeou
 bool UActionControlComponent::TriggerSpecialLightAction()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerSpecialLightAction"));
-	return TriggerActionLogic(SpecialLightAction);
+
+	if (IsSpecialLightActionReady)
+		return TriggerActionLogic(SpecialLightAction);
+
+	return false;
 }
 
 bool UActionControlComponent::TriggerSpecialHeavyAction()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerSpecialHeavyAction"));
-	return TriggerActionLogic(SpecialHeavyAction);
+
+	if (IsSpecialHeavyActionReady)
+		return TriggerActionLogic(SpecialHeavyAction);
+
+	return false;
 }
 
 void UActionControlComponent::AllowComboAction()
@@ -375,7 +385,7 @@ void UActionControlComponent::ActivateOrQueueLightAttack(bool Press, bool Releas
 	{
 		IsLightHeld = true;
 
-		if (OwnerCharacter && (OwnerCharacter->IsRunning || CurrentAction.IsEqual(BackstepAction.ActionName)))
+		if (OwnerCharacter && (CurrentAction.IsEqual("?") && OwnerCharacter->IsRunning) || (CurrentAction.IsEqual(BackstepAction.ActionName)))
 		{
 			ActivateOrQueueAction(EQueueActions::RunningAttack);
 		}

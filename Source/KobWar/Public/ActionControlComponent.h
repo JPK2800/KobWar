@@ -23,6 +23,7 @@ enum EQueueActions
 	RunningAttack = 6		UMETA(DisplayName = "RunningAttack"),
 	SpecialLight = 7		UMETA(DisplayName = "SpecialLight"),
 	SpecialHeavy = 8		UMETA(DisplayName = "SpecialHeavy"),
+
 };
 
 USTRUCT(BlueprintType)
