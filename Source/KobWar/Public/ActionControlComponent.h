@@ -184,6 +184,8 @@ protected:
 
 	bool TriggerStaggerAction();
 
+	bool TriggerStagger2Action();
+
 	bool TriggerLandAction();
 
 	bool TriggerActionLogic(FActionDataStruct ActionData);
@@ -331,6 +333,9 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct StaggerAction;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	FActionDataStruct Stagger2Action;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct LandAction;

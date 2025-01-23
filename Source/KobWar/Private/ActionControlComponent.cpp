@@ -174,6 +174,12 @@ bool UActionControlComponent::TriggerStaggerAction()
 	return TriggerActionLogic(StaggerAction);
 }
 
+bool UActionControlComponent::TriggerStagger2Action()
+{
+	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerStagger2Action"));
+	return TriggerActionLogic(Stagger2Action);
+}
+
 bool UActionControlComponent::TriggerLandAction()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerLandAction"));
@@ -522,6 +528,10 @@ void UActionControlComponent::EndDodgeReleaseThreshold()
 
 bool UActionControlComponent::ForceActivateStagger()
 {
+	if (CurrentAction.IsEqual(StaggerAction.ActionName) || CurrentAction.IsEqual(Stagger2Action.ActionName))
+	{
+		return TriggerStagger2Action();
+	}
 	return TriggerStaggerAction();
 }
 
