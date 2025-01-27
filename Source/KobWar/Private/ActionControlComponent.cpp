@@ -156,6 +156,9 @@ bool UActionControlComponent::TriggerHeavyAttack()
 
 bool UActionControlComponent::TriggerDodgeAction()
 {
+	if (IsAiming)
+		return false;
+
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerDodgeAction"));
 	return TriggerActionLogic(DodgeAction);
 }
@@ -180,6 +183,9 @@ bool UActionControlComponent::TriggerRunningAttack()
 
 bool UActionControlComponent::TriggerBackstepAction()
 {
+	if (IsAiming)
+		return false;
+
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerDodgeAction"));
 	return TriggerActionLogic(BackstepAction);
 }
@@ -469,13 +475,13 @@ void UActionControlComponent::ActivateOrQueueDodge(bool Press, bool Release)
 	if (Release)
 	{
 		IsDodgeHeld = false;
-		if (CurrentAction == DodgeAction.ActionName)
+		if (CurrentAction == DodgeAction.ActionName && !IsAiming)
 		{
 			TriggerChargeComboCurrentAction(false, true);
 		}
 	}
 
-	if (!OwnerCharacter)
+	if (!OwnerCharacter || IsAiming)
 		return;
 
 	auto moveInputs = OwnerCharacter->GetCurrentMovementInput();
