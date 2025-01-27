@@ -9,6 +9,8 @@
 #include "ActionControlComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFireActionEvent, FString, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToggleAiming, bool, Aiming);
+
 
 
 UENUM(BlueprintType)
@@ -275,6 +277,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	void SetIsReadyForSpecialHeavyAction(bool HeavyActionHeavy);
 
+	void SetAiming(bool Toggle);	// When true, the special skill is a special aiming state (like aiming)
+
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	bool GetAimWithSpecialHeld();
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	float GetAimMoveSpeed();
+
 #pragma endregion
 
 
@@ -356,10 +368,21 @@ protected:
 
 	bool IsSpecialHeavyActionReady = false;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	bool UseAimWithSpecialHeld = false;
+
+	bool IsAiming = false;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	float AimingMovementSpeed = 50.0f;
+
 	FName CurrentAction = FName("?");
 
 	public:
 
 	UPROPERTY(BlueprintAssignable)
 	FFireActionEvent OnFireActionEvent;
+
+	UPROPERTY(BlueprintAssignable)
+	FToggleAiming OnToggleAiming;
 };

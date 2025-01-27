@@ -120,7 +120,11 @@ void AKobWarCharacter::ServerSetTeamId_Implementation(const uint8 NewTeamId)
 
 void AKobWarCharacter::UpdateSpeed()
 {
-	if (IsRunning)
+	if (ActionControl && ActionControl->GetAimWithSpecialHeld())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = ActionControl->GetAimMoveSpeed();
+	}
+	else if (IsRunning)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = BaseRunSpeed;
 	}
@@ -192,9 +196,6 @@ void AKobWarCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 
 	PlayerInputComponent->BindAction("LightAttack", IE_Pressed, this, &AKobWarCharacter::AttackLightPressed);
 	PlayerInputComponent->BindAction("LightAttack", IE_Released, this, &AKobWarCharacter::AttackLightReleased);
-
-	PlayerInputComponent->BindAction("HeavyAttack", IE_Pressed, this, &AKobWarCharacter::AttackHeavyPressed);
-	PlayerInputComponent->BindAction("HeavyAttack", IE_Released, this, &AKobWarCharacter::AttackHeavyReleased);
 
 	PlayerInputComponent->BindAction("HeavyAttack", IE_Pressed, this, &AKobWarCharacter::AttackHeavyPressed);
 	PlayerInputComponent->BindAction("HeavyAttack", IE_Released, this, &AKobWarCharacter::AttackHeavyReleased);
@@ -434,7 +435,9 @@ void AKobWarCharacter::ViewHorizontalMouse(float Value)
 
 	if (!IsLockedOn)
 	{
-		TurnAtRate(Value);
+		float aimingModifier = ActionControl && ActionControl->GetAimWithSpecialHeld() ? 0.25f : 1.0f;
+
+		TurnAtRate(Value * aimingModifier);
 	}
 
 }
@@ -450,7 +453,9 @@ void AKobWarCharacter::ViewVerticalMouse(float Value)
 
 	if (!IsLockedOn)
 	{
-		LookUpAtRate(Value);
+		float aimingModifier = ActionControl && ActionControl->GetAimWithSpecialHeld() ? 0.25f : 1.0f;
+
+		LookUpAtRate(Value * aimingModifier);
 	}
 }
 
@@ -465,7 +470,9 @@ void AKobWarCharacter::ViewHorizontalController(float Value)
 
 	if (!IsLockedOn)
 	{
-		AddControllerYawInput(Value);
+		float aimingModifier = ActionControl && ActionControl->GetAimWithSpecialHeld() ? 0.25f : 1.0f;
+
+		AddControllerYawInput(Value * aimingModifier);
 	}
 
 }
@@ -481,7 +488,9 @@ void AKobWarCharacter::ViewVerticalController(float Value)
 
 	if (!IsLockedOn)
 	{
-		AddControllerPitchInput(Value);
+		float aimingModifier = ActionControl && ActionControl->GetAimWithSpecialHeld() ? 0.25f : 1.0f;
+
+		AddControllerPitchInput(Value * aimingModifier);
 	}
 
 }

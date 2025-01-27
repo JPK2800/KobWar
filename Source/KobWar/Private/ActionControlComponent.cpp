@@ -95,32 +95,32 @@ void UActionControlComponent::ActivateAction(EQueueActions QueuedAction)
 	// ready to trigger the action now
 	switch (QueuedAction)
 	{
-		case (EQueueActions::LightAttack):
-			TriggerLightAttack();
-			break;
-		case (EQueueActions::HeavyAttack):
-			TriggerHeavyAttack();
-			break;
-		case (EQueueActions::Dodge):
-			TriggerDodgeAction();
-			break;
-		case (EQueueActions::Backstep):
-			TriggerBackstepAction();
-			break;
-		case (EQueueActions::WeaponSkill):
-			TriggerWeaponSkillAction();
-			break;
-		case (EQueueActions::RunningAttack):
-			TriggerRunningAttack();
-			break;
-		case (EQueueActions::SpecialLight):
-			TriggerSpecialLightAction();
-			break;
-		case (EQueueActions::SpecialHeavy):
-			TriggerSpecialHeavyAction();
-			break;
-		default:
-			return;
+	case (EQueueActions::LightAttack):
+		TriggerLightAttack();
+		break;
+	case (EQueueActions::HeavyAttack):
+		TriggerHeavyAttack();
+		break;
+	case (EQueueActions::Dodge):
+		TriggerDodgeAction();
+		break;
+	case (EQueueActions::Backstep):
+		TriggerBackstepAction();
+		break;
+	case (EQueueActions::WeaponSkill):
+		TriggerWeaponSkillAction();
+		break;
+	case (EQueueActions::RunningAttack):
+		TriggerRunningAttack();
+		break;
+	case (EQueueActions::SpecialLight):
+		TriggerSpecialLightAction();
+		break;
+	case (EQueueActions::SpecialHeavy):
+		TriggerSpecialHeavyAction();
+		break;
+	default:
+		return;
 	}
 
 	ClearActionQueue();	// clear queue just in case
@@ -135,12 +135,22 @@ void UActionControlComponent::TickComponent(float DeltaTime, ELevelTick TickType
 bool UActionControlComponent::TriggerLightAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerLightAttack"));
+
+	if (UseAimWithSpecialHeld && IsAiming)
+	{
+		return false;
+	}
 	return TriggerActionLogic(LightAttack);
 }
 
 bool UActionControlComponent::TriggerHeavyAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerHeavyAttack"));
+
+	if (UseAimWithSpecialHeld && IsAiming)
+	{
+		return false;
+	}
 	return TriggerActionLogic(HeavyAttack);
 }
 
@@ -152,6 +162,12 @@ bool UActionControlComponent::TriggerDodgeAction()
 
 bool UActionControlComponent::TriggerWeaponSkillAction()
 {
+	if (UseAimWithSpecialHeld)
+	{
+		// do not use any skill with an aim-state special
+		return false;
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerWeaponSkillAction"));
 	return TriggerActionLogic(WeaponSkillAction);
 }
@@ -303,7 +319,7 @@ bool UActionControlComponent::TriggerSpecialLightAction()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerSpecialLightAction"));
 
-	if (IsSpecialLightActionReady)
+	if (IsSpecialLightActionReady || (UseAimWithSpecialHeld && IsAiming))
 		return TriggerActionLogic(SpecialLightAction);
 
 	return false;
@@ -313,7 +329,7 @@ bool UActionControlComponent::TriggerSpecialHeavyAction()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerSpecialHeavyAction"));
 
-	if (IsSpecialHeavyActionReady)
+	if (IsSpecialHeavyActionReady || (UseAimWithSpecialHeld && IsAiming))
 		return TriggerActionLogic(SpecialHeavyAction);
 
 	return false;
@@ -395,7 +411,7 @@ void UActionControlComponent::ActivateOrQueueLightAttack(bool Press, bool Releas
 		{
 			ActivateOrQueueAction(EQueueActions::RunningAttack);
 		}
-		else if (OwnerCharacter && (IsSpecialLightActionReady))
+		else if (OwnerCharacter && (IsSpecialLightActionReady || (UseAimWithSpecialHeld && IsAiming)))
 		{
 			ActivateOrQueueAction(EQueueActions::SpecialLight);
 		}
@@ -421,7 +437,7 @@ void UActionControlComponent::ActivateOrQueueHeavyAttack(bool Press, bool Releas
 	{
 		IsHeavyHeld = true;
 
-		if (OwnerCharacter && (IsSpecialHeavyActionReady))
+		if (OwnerCharacter && (IsSpecialHeavyActionReady || (UseAimWithSpecialHeld && IsAiming)))
 		{
 			ActivateOrQueueAction(EQueueActions::SpecialHeavy);
 		}
@@ -488,15 +504,29 @@ void UActionControlComponent::ActivateOrQueueWeaponSkill(bool Press, bool Releas
 	if (Press)
 	{
 		IsWeaponSkillHeld = true;
-		ActivateOrQueueAction(EQueueActions::WeaponSkill);
+		if (UseAimWithSpecialHeld)
+		{
+			SetAiming(true);
+		}
+		else
+		{
+			ActivateOrQueueAction(EQueueActions::WeaponSkill);
+		}
 	}
 
 	if (Release)
 	{
 		IsWeaponSkillHeld = false;
-		if (CurrentAction == HeavyAttack.ActionName)
+		if (UseAimWithSpecialHeld)
 		{
-			TriggerChargeComboCurrentAction(false, true);
+			SetAiming(false);
+		}
+		else
+		{
+			if (CurrentAction == WeaponSkillAction.ActionName)
+			{
+				TriggerChargeComboCurrentAction(false, true);
+			}
 		}
 	}
 }
@@ -646,6 +676,22 @@ bool UActionControlComponent::GetIsActionHeld(FName Action)
 void UActionControlComponent::SetIsReadyForSpecialHeavyAction(bool HeavyActionHeavy)
 {
 	IsSpecialHeavyActionReady = HeavyActionHeavy;
+}
+
+void UActionControlComponent::SetAiming(bool Toggle)
+{
+	IsAiming = Toggle;
+	OnToggleAiming.Broadcast(Toggle);
+}
+
+bool UActionControlComponent::GetAimWithSpecialHeld()
+{
+	return IsAiming;
+}
+
+float UActionControlComponent::GetAimMoveSpeed()
+{
+	return AimingMovementSpeed;
 }
 
 void UActionControlComponent::SetIsReadyForSpecialLightAction(bool LightActionHeavy)
