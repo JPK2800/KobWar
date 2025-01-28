@@ -512,7 +512,7 @@ void UActionControlComponent::ActivateOrQueueWeaponSkill(bool Press, bool Releas
 		IsWeaponSkillHeld = true;
 		if (UseAimWithSpecialHeld)
 		{
-			SetAiming(true);
+			SetAimingHeld(true);
 		}
 		else
 		{
@@ -525,7 +525,7 @@ void UActionControlComponent::ActivateOrQueueWeaponSkill(bool Press, bool Releas
 		IsWeaponSkillHeld = false;
 		if (UseAimWithSpecialHeld)
 		{
-			SetAiming(false);
+			SetAimingHeld(false);
 		}
 		else
 		{
@@ -684,10 +684,14 @@ void UActionControlComponent::SetIsReadyForSpecialHeavyAction(bool HeavyActionHe
 	IsSpecialHeavyActionReady = HeavyActionHeavy;
 }
 
+void UActionControlComponent::SetAimingHeld(bool Toggle)
+{
+	OnToggleAiming.Broadcast(Toggle);
+}
+
 void UActionControlComponent::SetAiming(bool Toggle)
 {
 	IsAiming = Toggle;
-	OnToggleAiming.Broadcast(Toggle);
 }
 
 bool UActionControlComponent::GetAimWithSpecialHeld()

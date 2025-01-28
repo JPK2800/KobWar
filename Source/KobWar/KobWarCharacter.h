@@ -239,6 +239,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool IsRunning = false;
 
+	/* True when the character is aiming */
+	bool IsAiming = false;
+
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -427,6 +430,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UpdateState(TEnumAsByte<ECharacterState> NewState);
 
+	UFUNCTION(BlueprintCallable)
+	void SetAimingState(bool Toggle);
+
 	/* Getter for the character state */
 	UFUNCTION(BlueprintCallable)
 	ECharacterState GetState();
@@ -434,6 +440,7 @@ public:
 	/* Action animation play */
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayActionAnimation(UAnimMontage* Animation);
+
 #pragma endregion
 
 #pragma region LockOn

@@ -44,6 +44,7 @@ protected:
 
 	ULockOnTargSceneComponent* LockOnFindTarget();
 
+	UFUNCTION(BlueprintCallable)
 	bool SetLockOnTarget(ULockOnTargSceneComponent* LockOnTarg);
 
 	void UnlockFromTarget();
@@ -82,6 +83,13 @@ protected:
 	// void InterpLockOnOffset(float DeltaTime);
 
 #pragma endregion
+
+#pragma region LockOffPause
+
+	UFUNCTION(BlueprintCallable)
+	void PauseForReason(bool Toggle, FName Reason);	// Temporarily disables lock on logic for the input reason
+#pragma endregion
+
 
 public:	
 	// Called every frame
@@ -127,6 +135,13 @@ protected:
 	uint8 NoVisionVerifyCount = 0;
 
 #pragma endregion
+
+#pragma region LockOffPause
+
+	TArray<FName> ToggleOffReasons = TArray<FName>();
+
+#pragma endregion
+
 
 public:
 

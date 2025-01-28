@@ -277,7 +277,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	void SetIsReadyForSpecialHeavyAction(bool HeavyActionHeavy);
 
-	void SetAiming(bool Toggle);	// When true, the special skill is a special aiming state (like aiming)
+	void SetAimingHeld(bool Toggle);	// Broadcast the aiming state so the player character can determine if it is time to aim
+
+	void SetAiming(bool Toggle);		// Update when the character is aiming
 
 public:
 

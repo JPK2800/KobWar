@@ -120,7 +120,7 @@ void AKobWarCharacter::ServerSetTeamId_Implementation(const uint8 NewTeamId)
 
 void AKobWarCharacter::UpdateSpeed()
 {
-	if (ActionControl && ActionControl->GetAimWithSpecialHeld())
+	if (ActionControl && IsAiming)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = ActionControl->GetAimMoveSpeed();
 	}
@@ -170,6 +170,16 @@ void AKobWarCharacter::UpdateState(TEnumAsByte<ECharacterState> NewState)
 	case (ECharacterState::Falling):
 		UE_LOG(LogTemp, Warning, TEXT("Falling State"), NewState.GetValue());
 		break;
+	}
+}
+
+void AKobWarCharacter::SetAimingState(bool Toggle)
+{
+	IsAiming = Toggle;
+
+	if (ActionControl)
+	{
+		ActionControl->SetAiming(Toggle);
 	}
 }
 
@@ -435,7 +445,7 @@ void AKobWarCharacter::ViewHorizontalMouse(float Value)
 
 	if (!IsLockedOn)
 	{
-		float aimingModifier = ActionControl && ActionControl->GetAimWithSpecialHeld() ? 0.25f : 1.0f;
+		float aimingModifier = ActionControl && IsAiming ? 0.25f : 1.0f;
 
 		TurnAtRate(Value * aimingModifier);
 	}
@@ -453,7 +463,7 @@ void AKobWarCharacter::ViewVerticalMouse(float Value)
 
 	if (!IsLockedOn)
 	{
-		float aimingModifier = ActionControl && ActionControl->GetAimWithSpecialHeld() ? 0.25f : 1.0f;
+		float aimingModifier = ActionControl && IsAiming ? 0.25f : 1.0f;
 
 		LookUpAtRate(Value * aimingModifier);
 	}
@@ -470,7 +480,7 @@ void AKobWarCharacter::ViewHorizontalController(float Value)
 
 	if (!IsLockedOn)
 	{
-		float aimingModifier = ActionControl && ActionControl->GetAimWithSpecialHeld() ? 0.25f : 1.0f;
+		float aimingModifier = ActionControl && IsAiming ? 0.25f : 1.0f;
 
 		AddControllerYawInput(Value * aimingModifier);
 	}
@@ -488,7 +498,7 @@ void AKobWarCharacter::ViewVerticalController(float Value)
 
 	if (!IsLockedOn)
 	{
-		float aimingModifier = ActionControl && ActionControl->GetAimWithSpecialHeld() ? 0.25f : 1.0f;
+		float aimingModifier = ActionControl && IsAiming ? 0.25f : 1.0f;
 
 		AddControllerPitchInput(Value * aimingModifier);
 	}

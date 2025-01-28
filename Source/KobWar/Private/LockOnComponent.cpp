@@ -54,6 +54,11 @@ void ULockOnComponent::InitOwnerLink()
 
 void ULockOnComponent::LockOnPress(bool Press, bool Release)
 {
+	if (ToggleOffReasons.IsValidIndex(0))
+	{
+		return;
+	}
+
 	if (Press)
 	{
 		if (!LockOnTarget)
@@ -427,6 +432,22 @@ void ULockOnComponent::LockOnVerify()
 //	}
 //}
 
+
+void ULockOnComponent::PauseForReason(bool Toggle, FName Reason)
+{
+	if (Toggle)
+	{
+		ToggleOffReasons.Add(Reason);
+
+		if (LockOnTarget)
+		{
+			SetLockOnTarget(nullptr);
+		}
+	}
+	else {
+		ToggleOffReasons.Remove(Reason);
+	}
+}
 
 // Called every frame
 void ULockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
