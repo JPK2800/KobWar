@@ -132,6 +132,11 @@ void UActionControlComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
+FName UActionControlComponent::GetCurrentAction()
+{
+	return CurrentAction;
+}
+
 bool UActionControlComponent::TriggerLightAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerLightAttack"));

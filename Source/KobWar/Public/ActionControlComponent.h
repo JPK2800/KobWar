@@ -212,6 +212,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	bool InitializeActionData();
 
+	FName GetCurrentAction();
+
 #pragma region Queue or Activate Actions
 
 	bool ActivateOrQueueAction(EQueueActions Action);
@@ -387,4 +389,6 @@ protected:
 
 	UPROPERTY(BlueprintAssignable)
 	FToggleAiming OnToggleAiming;
+
+	FName NullAction = FName("?");
 };
