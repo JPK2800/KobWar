@@ -181,6 +181,8 @@ void AKobWarCharacter::SetAimingState(bool Toggle)
 	{
 		ActionControl->SetAiming(Toggle);
 	}
+
+	UpdateSpeed();
 }
 
 ECharacterState AKobWarCharacter::GetState()
