@@ -9,6 +9,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "ActionControlComponent.h"
+#include "ClimbingComponent.h"
 #include <Runtime/Engine/Public/Net/UnrealNetwork.h>
 
 
@@ -53,6 +54,8 @@ AKobWarCharacter::AKobWarCharacter(const FObjectInitializer& ObjectInitializer) 
 
 	LockOnTargetComponent = CreateDefaultSubobject<ULockOnTargSceneComponent>(TEXT("LockOnTargetComponent"));
 	LockOnTargetComponent->SetupAttachment(RootComponent);
+
+	ClimbingComponent = CreateDefaultSubobject <UClimbingComponent>(TEXT("ClimbingComp"));
 
 }
 
@@ -153,6 +156,16 @@ void AKobWarCharacter::Landed(const FHitResult& Hit)
 	OnBeginLanding.Broadcast();
 }
 
+bool AKobWarCharacter::ActivateUniqueAction(FActionDataStruct& ActionData)
+{
+	if (!ActionControl || ActionControl->GetCurrentAction() != ActionControl->NullAction)
+	{
+		return false;
+	}
+
+	return ActionControl->TriggerOtherAction(ActionData);
+}
+
 void AKobWarCharacter::UpdateState(TEnumAsByte<ECharacterState> NewState)
 {
 	auto prevState = CharacterState;
@@ -188,6 +201,11 @@ void AKobWarCharacter::SetAimingState(bool Toggle)
 ECharacterState AKobWarCharacter::GetState()
 {
 	return CharacterState;
+}
+
+UActionControlComponent* AKobWarCharacter::GetActionControl()
+{
+	return ActionControl;
 }
 
 void AKobWarCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -451,7 +469,6 @@ void AKobWarCharacter::ViewHorizontalMouse(float Value)
 
 		TurnAtRate(Value * aimingModifier);
 	}
-
 }
 
 void AKobWarCharacter::ViewVerticalMouse(float Value)
@@ -566,6 +583,11 @@ void AKobWarCharacter::MoveForward(float Value)
 	if (AreInputsPausedForMenu)
 		return;
 
+	if (FMath::Abs(Value) > 0.05f)
+	{
+		OnMoveUp.Broadcast(Value);
+	}
+
 	if ((Controller != nullptr) && (Value != 0.0f))
 	{
 		// find out which way is forward
@@ -582,6 +604,11 @@ void AKobWarCharacter::MoveRight(float Value)
 {
 	if (AreInputsPausedForMenu)
 		return;
+
+	if (FMath::Abs(Value) > 0.05f)
+	{
+		OnMoveRight.Broadcast(Value);
+	}
 
 	if ( (Controller != nullptr) && (Value != 0.0f) )
 	{

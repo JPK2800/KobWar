@@ -13,6 +13,9 @@
 #pragma region Forward Declarations
 
 class UActionControlComponent;
+struct FActionDataStruct;
+
+class UClimbingComponent;
 
 #pragma endregion
 
@@ -46,6 +49,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBlockButton, bool, Press, bool, Re
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FInteractButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FUseItemButton, bool, Press, bool, Release);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponSkill, bool, Press, bool, Release);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMoveUp, float, InputY);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMoveRight, float, InputX);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FLookDir, FVector2D, Direction, float, Value);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMoveDir, FVector2D, Direction, float, Value);
@@ -89,6 +94,9 @@ class AKobWarCharacter : public AClientAuthoritativeCharacter
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions", meta = (AllowPrivateAccess = "true"))
 	class ULockOnTargSceneComponent* LockOnTargetComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Climbing", meta = (AllowPrivateAccess = "true"))
+	class UClimbingComponent* ClimbingComponent;
 
 protected:
 
@@ -180,6 +188,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FMoveDir OnMoveDir;
+
+	UPROPERTY(BlueprintAssignable)
+	FMoveUp OnMoveUp;
+
+	UPROPERTY(BlueprintAssignable)
+	FMoveRight OnMoveRight;
 
 #pragma endregion
 
@@ -389,6 +403,7 @@ protected:
 	/* Called when look-direction changes */
 	void LookDirUpdated(FVector2D& NormalizedInputVector, float& Magnitude);
 
+
 #pragma endregion
 
 #pragma region Movement
@@ -449,6 +464,22 @@ public:
 	void UpdateCameraControlMode(bool ToggleLockedOn);
 
 #pragma endregion
+
+#pragma region ActionControl
+
+	bool ActivateUniqueAction(FActionDataStruct& ActionData);
+
+#pragma endregion
+
+
+#pragma region Getters
+
+public:
+
+	UActionControlComponent* GetActionControl();
+
+#pragma endregion
+
 
 protected:
 	// APawn interface

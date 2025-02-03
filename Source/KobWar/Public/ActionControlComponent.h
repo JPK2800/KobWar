@@ -9,6 +9,7 @@
 #include "ActionControlComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFireActionEvent, FString, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FActionEnd, FName, Event);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToggleAiming, bool, Aiming);
 
 
@@ -64,13 +65,22 @@ private:
 					AllowEndTime = triggerTime;
 				}
 			}
-			const FAnimNotifyTrack notifiesEvents = ActionAnimation != nullptr && ActionAnimation->AnimNotifyTracks.IsValidIndex(1) ? ActionAnimation->AnimNotifyTracks[1] : FAnimNotifyTrack();
-			for (auto& notif : notifiesEvents.Notifies)
-			{
-				const FName& name = notif->NotifyName;
-				const float triggerTime = notif->GetTriggerTime();
 
-				EventsToFire.Add(TTuple<float, FName>(triggerTime, name));
+			if (ActionAnimation != nullptr)
+			{
+				int trackIndex = 1;
+				while (ActionAnimation->AnimNotifyTracks.IsValidIndex(trackIndex))
+				{
+					for (auto& notif : ActionAnimation->AnimNotifyTracks[trackIndex].Notifies)
+					{
+						const FName& name = notif->NotifyName;
+						const float triggerTime = notif->GetTriggerTime();
+
+						EventsToFire.Add(TTuple<float, FName>(triggerTime, name));
+					}
+
+					trackIndex++;
+				}
 			}
 
 			AreTriggersUpdated = true;
@@ -149,6 +159,8 @@ class KOBWAR_API UActionControlComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UActionControlComponent();
+
+	bool TriggerOtherAction(FActionDataStruct& Data);
 
 protected:
 	// Called when the game starts
@@ -386,6 +398,9 @@ protected:
 
 	UPROPERTY(BlueprintAssignable)
 	FFireActionEvent OnFireActionEvent;
+
+	UPROPERTY(BlueprintAssignable)
+	FActionEnd OnActionEnd;
 
 	UPROPERTY(BlueprintAssignable)
 	FToggleAiming OnToggleAiming;

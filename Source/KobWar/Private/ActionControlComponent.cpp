@@ -12,6 +12,14 @@ UActionControlComponent::UActionControlComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+bool UActionControlComponent::TriggerOtherAction(FActionDataStruct& Data)
+{
+	if (!OwnerCharacter)
+		return false;
+
+	return TriggerActionLogic(Data);
+}
+
 
 // Called when the game starts
 void UActionControlComponent::BeginPlay()
@@ -376,7 +384,10 @@ void UActionControlComponent::ActionEnd()
 	IsSpecialLightActionReady = false;
 	IsSpecialHeavyActionReady = false;
 
+	FName prevAction = CurrentAction;
 	CurrentAction = FName("?");
+
+	OnActionEnd.Broadcast(prevAction);
 
 	if (auto* movementComp = OwnerCharacter->GetCharacterMovement())
 	{
