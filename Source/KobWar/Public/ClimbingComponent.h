@@ -23,7 +23,8 @@ enum ClimbState
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FClimbStateChange, TEnumAsByte<ClimbState>, ClimbState);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+
+UCLASS(Blueprintable)
 class KOBWAR_API UClimbingComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -36,13 +37,28 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+public:
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+protected:
+
 	void InitOwner();
+
+#pragma region Input and tracing
+
+	void SpecialInputBinding(bool Bind);
+
+	UFUNCTION()
+	void SpecialInput(bool Pressed, bool Released);
+
+	bool TraceForClimbableMesh(AClimbingMesh*& FoundMesh);
+
+#pragma endregion
 
 	void MoveDirBinding(bool Bind);
 
 	void ActionEndBinding(bool Bind);
-
-	void LandBinding(bool Bind);
 
 public:	
 
@@ -53,29 +69,30 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool BeginClimbing(AClimbingMesh* ClimbableMesh);
 
-	void ReceiveClimbInput(float InputY);
+	void InterpToClimbingMesh(float DeltaTime);
 
-	UFUNCTION(BlueprintCallable)
-	bool BeginTopClimb();
+	UFUNCTION(BlueprintImplementableEvent)
+	void UpdateAnimationClimbingState(bool IsClimbing);
 
+	void UpdateOwnerClimbingState(bool IsClimbing);
+
+	UFUNCTION()
+	void ReceiveClimbMoveInput(float InputY);
+
+	UFUNCTION()
 	void ActionEnd(FName EndedAction);
 
 	void ClimbEnd();
 
-#pragma endregion
-
-#pragma region Climbing - Interrupted by taking a hit
-
-	void BeginTakeHitInterruptOnHit();
-
-	void BeginFalling();
-
-	void BeginLandedAfterFall();
+	void SnapOwnerToSurface();
 
 #pragma endregion
 
 
 protected:
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool DebugTrace = false;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	TEnumAsByte<ClimbState> CurrentClimbState = ClimbState::NotClimbing;
@@ -83,20 +100,13 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Climbing")
 	bool AllowClimbing = false;
 
+	bool ClimbHeld = false;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Climbing")
 	float ClimbSpeed = 5.0f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Climbing")
 	AClimbingMesh* CurrentClimbMesh = nullptr;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
-	FActionDataStruct ClimbToTopAction;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
-	FActionDataStruct StartFallingAction;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
-	FActionDataStruct GetUpAction;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	AKobWarCharacter* Owner;
@@ -111,6 +121,7 @@ protected:
 
 public:
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FClimbStateChange OnClimbStateChange;
+
 };

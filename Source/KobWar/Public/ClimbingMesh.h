@@ -9,9 +9,15 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class KOBWAR_API AClimbingMesh : public AStaticMeshActor
 {
 	GENERATED_BODY()
 	
+public:
+
+	AClimbingMesh();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Climbing Mesh")
+	USceneComponent* ClimbingMeshSceneComponent;
 };

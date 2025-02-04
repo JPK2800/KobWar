@@ -95,9 +95,6 @@ class AKobWarCharacter : public AClientAuthoritativeCharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions", meta = (AllowPrivateAccess = "true"))
 	class ULockOnTargSceneComponent* LockOnTargetComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Climbing", meta = (AllowPrivateAccess = "true"))
-	class UClimbingComponent* ClimbingComponent;
-
 protected:
 
 #pragma region States
@@ -264,7 +261,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 	
+protected:
 
+	float PrevForwardInput = 0.0f;
+	float PrevRightInput = 0.0f;
 
 protected:
 

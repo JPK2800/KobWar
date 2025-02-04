@@ -6,9 +6,11 @@
 #include "Components/ActorComponent.h"
 #include "Animation/AnimSequence.h"
 #include "KobWar/KobWarCharacter.h"
+#include "DrawDebugHelpers.h"
 #include "ActionControlComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFireActionEvent, FString, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FActionBegin, FName, Event);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FActionEnd, FName, Event);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToggleAiming, bool, Aiming);
 
@@ -26,6 +28,9 @@ enum EQueueActions
 	RunningAttack = 6		UMETA(DisplayName = "RunningAttack"),
 	SpecialLight = 7		UMETA(DisplayName = "SpecialLight"),
 	SpecialHeavy = 8		UMETA(DisplayName = "SpecialHeavy"),
+
+	ClimbUp = 20			UMETA(DisplayName = "ClimbUp"),
+	ClimbDown = 21			UMETA(DisplayName = "ClimbDown"),
 
 };
 
@@ -214,6 +219,19 @@ protected:
 
 	void ActionEnd();
 
+#pragma region Trigger Climbing Actions
+
+	bool TriggerClimbUp();
+
+	bool TriggerClimbUpToTop();
+
+	bool TriggerClimbDown();
+
+	bool TriggerClimbStagger();
+
+	bool TriggerClimbFallGetUp();
+
+#pragma endregion
 
 #pragma endregion
 
@@ -249,6 +267,17 @@ public:
 	void Falling();
 
 	void EndDodgeReleaseThreshold();
+
+#pragma region Climbing Queue or Activate Actions
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	void ActivateOrQueueClimbUp(bool Press, bool Release);
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	void ActivateOrQueueClimbDown(bool Press, bool Release);
+
+#pragma endregion
+
 
 #pragma endregion
 
@@ -295,6 +324,13 @@ public:
 
 	void SetAiming(bool Toggle);		// Update when the character is aiming
 
+	void SetIsClimbing(bool Toggle);	// Update when the character is climbing
+
+	bool TraceCheckIfClimbingAtTop();
+
+	bool TraceForFloorBelow();
+
+
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
@@ -302,6 +338,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	float GetAimMoveSpeed();
+
+	FName GetClimbToTopActionName();
 
 #pragma endregion
 
@@ -368,6 +406,25 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	FActionDataStruct LandAction;
 		
+#pragma region Climbing Actions
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	FActionDataStruct ClimbToTopAction;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	FActionDataStruct StartFallingAction;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	FActionDataStruct GetUpFromClimbFallAction;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	FActionDataStruct ClimbUpAction;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
+	FActionDataStruct ClimbDownAction;
+
+#pragma endregion
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Inputs")
 	float BackstepToDodgeThreshold = 0.5f;
 
@@ -389,6 +446,8 @@ protected:
 
 	bool IsAiming = false;
 
+	bool IsClimbing = false;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Actions")
 	float AimingMovementSpeed = 50.0f;
 
@@ -398,6 +457,9 @@ protected:
 
 	UPROPERTY(BlueprintAssignable)
 	FFireActionEvent OnFireActionEvent;
+
+	UPROPERTY(BlueprintAssignable)
+	FActionBegin OnActionBegin;
 
 	UPROPERTY(BlueprintAssignable)
 	FActionEnd OnActionEnd;

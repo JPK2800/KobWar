@@ -3,3 +3,10 @@
 
 #include "ClimbingMesh.h"
 
+AClimbingMesh::AClimbingMesh()
+{
+	PrimaryActorTick.bCanEverTick = false;
+
+	ClimbingMeshSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("ClimbingMeshSceneComponent"));
+	ClimbingMeshSceneComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+}

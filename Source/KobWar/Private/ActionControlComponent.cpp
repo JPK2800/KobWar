@@ -72,6 +72,7 @@ bool UActionControlComponent::CheckQueueForNewAction()
 	}
 	// no valid action was found - empty the queue just in case
 	ClearActionQueue();
+
 	return false;
 }
 
@@ -100,38 +101,55 @@ void UActionControlComponent::ClearActionQueue()
 
 void UActionControlComponent::ActivateAction(EQueueActions QueuedAction)
 {
+	bool result = false;
+
 	// ready to trigger the action now
 	switch (QueuedAction)
 	{
 	case (EQueueActions::LightAttack):
-		TriggerLightAttack();
+		result = TriggerLightAttack();
 		break;
 	case (EQueueActions::HeavyAttack):
-		TriggerHeavyAttack();
+		result = TriggerHeavyAttack();
 		break;
 	case (EQueueActions::Dodge):
-		TriggerDodgeAction();
+		result = TriggerDodgeAction();
 		break;
 	case (EQueueActions::Backstep):
-		TriggerBackstepAction();
+		result = TriggerBackstepAction();
 		break;
 	case (EQueueActions::WeaponSkill):
-		TriggerWeaponSkillAction();
+		result = TriggerWeaponSkillAction();
 		break;
 	case (EQueueActions::RunningAttack):
-		TriggerRunningAttack();
+		result = TriggerRunningAttack();
 		break;
 	case (EQueueActions::SpecialLight):
-		TriggerSpecialLightAction();
+		result = TriggerSpecialLightAction();
 		break;
 	case (EQueueActions::SpecialHeavy):
-		TriggerSpecialHeavyAction();
+		result = TriggerSpecialHeavyAction();
+		break;
+	case (EQueueActions::ClimbUp):
+		result = TriggerClimbUp();
+		break;
+	case (EQueueActions::ClimbDown):
+		result = TriggerClimbDown();
 		break;
 	default:
 		return;
 	}
 
 	ClearActionQueue();	// clear queue just in case
+
+	if (!result)
+	{
+		// if there is a current action but we couldn't trigger a new one, it should be force ended now
+		if (CurrentAction != NullAction)
+		{
+			ActionEnd();
+		}
+	}
 }
 
 // Called every frame
@@ -149,6 +167,9 @@ bool UActionControlComponent::TriggerLightAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerLightAttack"));
 
+	if (IsClimbing)
+		return false;
+
 	if (UseAimWithSpecialHeld && IsAiming)
 	{
 		return false;
@@ -160,6 +181,9 @@ bool UActionControlComponent::TriggerHeavyAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerHeavyAttack"));
 
+	if (IsClimbing)
+		return false;
+
 	if (UseAimWithSpecialHeld && IsAiming)
 	{
 		return false;
@@ -169,6 +193,9 @@ bool UActionControlComponent::TriggerHeavyAttack()
 
 bool UActionControlComponent::TriggerDodgeAction()
 {
+	if (IsClimbing)
+		return false;
+
 	if (IsAiming)
 		return false;
 
@@ -178,6 +205,9 @@ bool UActionControlComponent::TriggerDodgeAction()
 
 bool UActionControlComponent::TriggerWeaponSkillAction()
 {
+	if (IsClimbing)
+		return false;
+
 	if (UseAimWithSpecialHeld)
 	{
 		// do not use any skill with an aim-state special
@@ -190,12 +220,18 @@ bool UActionControlComponent::TriggerWeaponSkillAction()
 
 bool UActionControlComponent::TriggerRunningAttack()
 {
+	if (IsClimbing)
+		return false;
+
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerRunningAttack"));
 	return TriggerActionLogic(RunningAttack);;
 }
 
 bool UActionControlComponent::TriggerBackstepAction()
 {
+	if (IsClimbing)
+		return false;
+
 	if (IsAiming)
 		return false;
 
@@ -205,18 +241,27 @@ bool UActionControlComponent::TriggerBackstepAction()
 
 bool UActionControlComponent::TriggerStaggerAction()
 {
+	if (IsClimbing)
+		return false;
+
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerStaggerAction"));
 	return TriggerActionLogic(StaggerAction);
 }
 
 bool UActionControlComponent::TriggerStagger2Action()
 {
+	if (IsClimbing)
+		return false;
+
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerStagger2Action"));
 	return TriggerActionLogic(Stagger2Action);
 }
 
 bool UActionControlComponent::TriggerLandAction()
 {
+	if (IsClimbing)
+		return false;
+
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerLandAction"));
 	return TriggerActionLogic(LandAction);
 }
@@ -312,6 +357,8 @@ bool UActionControlComponent::TriggerActionLogic(FActionDataStruct ActionData)
 					EventTimers.Add(eventTimer);
 				}
 			}
+
+			OnActionBegin.Broadcast(ActionData.ActionName);
 			return true;
 		}
 	}
@@ -338,6 +385,9 @@ bool UActionControlComponent::TriggerSpecialLightAction()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerSpecialLightAction"));
 
+	if (IsClimbing)
+		return false;
+
 	if (IsSpecialLightActionReady || (UseAimWithSpecialHeld && IsAiming))
 		return TriggerActionLogic(SpecialLightAction);
 
@@ -347,6 +397,9 @@ bool UActionControlComponent::TriggerSpecialLightAction()
 bool UActionControlComponent::TriggerSpecialHeavyAction()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerSpecialHeavyAction"));
+
+	if (IsClimbing)
+		return false;
 
 	if (IsSpecialHeavyActionReady || (UseAimWithSpecialHeld && IsAiming))
 		return TriggerActionLogic(SpecialHeavyAction);
@@ -399,6 +452,59 @@ void UActionControlComponent::ActionEnd()
 	}
 	TriggerStateChange(ECharacterState::Ready);
 
+}
+
+bool UActionControlComponent::TriggerClimbUp()
+{
+	if (!IsClimbing)
+		return false;
+
+	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerClimbUp"));
+	if (TraceCheckIfClimbingAtTop())
+	{
+		return TriggerActionLogic(ClimbToTopAction);
+	}
+
+	return TriggerActionLogic(ClimbUpAction);
+}
+
+bool UActionControlComponent::TriggerClimbUpToTop()
+{
+	if (!IsClimbing)
+		return false;
+
+	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerClimbUpToTop"));
+	return TriggerActionLogic(ClimbToTopAction);
+}
+
+bool UActionControlComponent::TriggerClimbDown()
+{
+	if (!IsClimbing)
+		return false;
+
+	if (TraceForFloorBelow())
+		return false;
+
+	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerClimbDown"));
+	return TriggerActionLogic(ClimbDownAction);
+}
+
+bool UActionControlComponent::TriggerClimbStagger()
+{
+	if (!IsClimbing)
+		return false;
+
+	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerClimbStagger"));
+	return TriggerActionLogic(StartFallingAction);
+}
+
+bool UActionControlComponent::TriggerClimbFallGetUp()
+{
+	if (IsClimbing)
+		return false;
+
+	UE_LOG(LogTemp, Warning, TEXT("UActionControlComponent::TriggerClimbFallGetUp"));
+	return TriggerActionLogic(GetUpFromClimbFallAction);
 }
 
 bool UActionControlComponent::ActivateOrQueueAction(EQueueActions Action)
@@ -578,6 +684,28 @@ void UActionControlComponent::EndDodgeReleaseThreshold()
 	IsDodgeReleaseThreshold = false;
 }
 
+void UActionControlComponent::ActivateOrQueueClimbUp(bool Press, bool Release)
+{
+	if (Press)
+	{
+		if (OwnerCharacter && IsClimbing)
+		{
+			ActivateOrQueueAction(EQueueActions::ClimbUp);
+		}
+	}
+}
+
+void UActionControlComponent::ActivateOrQueueClimbDown(bool Press, bool Release)
+{
+	if (Press)
+	{
+		if (OwnerCharacter && IsClimbing)
+		{
+			ActivateOrQueueAction(EQueueActions::ClimbDown);
+		}
+	}
+}
+
 bool UActionControlComponent::ForceActivateStagger()
 {
 	if (CurrentAction.IsEqual(StaggerAction.ActionName) || CurrentAction.IsEqual(Stagger2Action.ActionName))
@@ -710,6 +838,77 @@ void UActionControlComponent::SetAiming(bool Toggle)
 	IsAiming = Toggle;
 }
 
+void UActionControlComponent::SetIsClimbing(bool Toggle)
+{
+	IsClimbing = Toggle;
+}
+
+bool UActionControlComponent::TraceCheckIfClimbingAtTop()
+{
+	FVector start = OwnerCharacter->GetActorLocation() + FVector(0,0,60); 
+	FRotator rot = OwnerCharacter->GetActorRotation();
+	FVector forwardVector = rot.Vector(); 
+
+	float TraceDistance = 100.0f;
+
+	FVector end = start + forwardVector * TraceDistance;
+
+	// Perform the line trace.
+	FHitResult HitResult;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(OwnerCharacter); 
+
+	// Perform the horizontal line trace.
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		start,
+		end,
+		ECC_Visibility, 
+		CollisionParams
+	);
+
+	if (bHit)
+		DrawDebugLine(GetWorld(), start, end, FColor::Green, false, 1.f, 0, 1.f);
+	else 
+		DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 1.f, 0, 1.f);
+
+
+	return !bHit;
+
+}
+
+bool UActionControlComponent::TraceForFloorBelow()
+{
+	FVector start = OwnerCharacter->GetActorLocation();
+
+	FVector TraceDistance = FVector(0, 0, -45.0f);
+
+	FVector end = start + TraceDistance;
+
+	// Perform the line trace.
+	FHitResult HitResult;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(OwnerCharacter);
+
+	// Perform the horizontal line trace.
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		start,
+		end,
+		ECC_Visibility,
+		CollisionParams
+	);
+
+	if (bHit)
+		DrawDebugLine(GetWorld(), start, end, FColor::Green, false, 1.f, 0, 1.f);
+	else
+		DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 1.f, 0, 1.f);
+
+
+	return bHit;
+}
+
+
 bool UActionControlComponent::GetAimWithSpecialHeld()
 {
 	return IsAiming;
@@ -719,6 +918,12 @@ float UActionControlComponent::GetAimMoveSpeed()
 {
 	return AimingMovementSpeed;
 }
+
+FName UActionControlComponent::GetClimbToTopActionName()
+{
+	return ClimbToTopAction.ActionName;
+}
+
 
 void UActionControlComponent::SetIsReadyForSpecialLightAction(bool LightActionHeavy)
 {

@@ -55,8 +55,6 @@ AKobWarCharacter::AKobWarCharacter(const FObjectInitializer& ObjectInitializer) 
 	LockOnTargetComponent = CreateDefaultSubobject<ULockOnTargSceneComponent>(TEXT("LockOnTargetComponent"));
 	LockOnTargetComponent->SetupAttachment(RootComponent);
 
-	ClimbingComponent = CreateDefaultSubobject <UClimbingComponent>(TEXT("ClimbingComp"));
-
 }
 
 void AKobWarCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -580,10 +578,13 @@ void AKobWarCharacter::SetPausedInputsForMenu(bool Pause)
 
 void AKobWarCharacter::MoveForward(float Value)
 {
+	float prevVal = PrevForwardInput;
+	PrevForwardInput = Value;
+
 	if (AreInputsPausedForMenu)
 		return;
 
-	if (FMath::Abs(Value) > 0.05f)
+	if (Value != prevVal)
 	{
 		OnMoveUp.Broadcast(Value);
 	}
@@ -602,10 +603,13 @@ void AKobWarCharacter::MoveForward(float Value)
 
 void AKobWarCharacter::MoveRight(float Value)
 {
+	float prevVal = PrevRightInput;
+	PrevRightInput = Value;
+
 	if (AreInputsPausedForMenu)
 		return;
 
-	if (FMath::Abs(Value) > 0.05f)
+	if (FMath::Abs(Value) != prevVal)
 	{
 		OnMoveRight.Broadcast(Value);
 	}
