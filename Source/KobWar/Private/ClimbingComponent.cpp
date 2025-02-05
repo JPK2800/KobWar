@@ -194,6 +194,7 @@ bool UClimbingComponent::BeginClimbing(AClimbingMesh* ClimbableMesh)
 		OnClimbStateChange.Broadcast(ClimbState::BasicClimbing);
 		OwnerMovementComp->GravityScale = 0.0f;
 		OwnerMovementComp->SetMovementMode(EMovementMode::MOVE_Flying);
+		OnMovementModeChangeEvent.Broadcast(EMovementMode::MOVE_Flying);
 		MoveDirBinding(true);
 		ActionEndBinding(true);
 		UpdateAnimationClimbingState(true);
@@ -286,6 +287,7 @@ void UClimbingComponent::ClimbEnd()
 	CurrentClimbMesh = nullptr;
 	OwnerMovementComp->GravityScale = 2.0f;
 	OwnerMovementComp->SetMovementMode(EMovementMode::MOVE_Walking);
+	OnMovementModeChangeEvent.Broadcast(EMovementMode::MOVE_Walking);
 	//SnapOwnerToSurface();
 	OnClimbStateChange.Broadcast(ClimbState::NotClimbing);
 	UpdateAnimationClimbingState(false);

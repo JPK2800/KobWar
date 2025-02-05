@@ -23,8 +23,10 @@ enum ClimbState
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FClimbStateChange, TEnumAsByte<ClimbState>, ClimbState);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMovementModeChange, TEnumAsByte<EMovementMode>, MovementMode);
 
-UCLASS(Blueprintable)
+
+UCLASS(BlueprintType, Blueprintable)
 class KOBWAR_API UClimbingComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -123,5 +125,8 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FClimbStateChange OnClimbStateChange;
+
+	UPROPERTY(BlueprintAssignable, BlueprintReadWrite, EditAnywhere)
+	FMovementModeChange OnMovementModeChangeEvent;
 
 };
