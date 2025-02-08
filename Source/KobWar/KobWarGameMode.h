@@ -123,7 +123,27 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Teams", meta = (EditCondition = "IsTeamBased"))
 	bool SwitchSidesEachRound = false;
 
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Teams", meta = (EditCondition = "IsTeamBased"))
+	bool IsBlackTeamAttacking = true;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Teams", meta = (EditCondition = "IsTeamBased"))
+	bool IsWhiteTeamAttacking = false;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Teams", meta = (EditCondition = "IsTeamBased"))
+	bool IsTeam1AttackingFirst = true;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Teams", meta = (EditCondition = "IsTeamBased"))
+	bool IsTeam2AttackingFirst = false;
+	
 #pragma endregion
+
+#pragma region Rounds
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Teams")
+	uint8 RoundCount = 2;
+
+#pragma endregion
+
 
 public:
 
