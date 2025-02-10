@@ -845,7 +845,7 @@ void UActionControlComponent::SetIsClimbing(bool Toggle)
 
 bool UActionControlComponent::TraceCheckIfClimbingAtTop()
 {
-	FVector start = OwnerCharacter->GetActorLocation() + FVector(0,0,60); 
+	FVector start = OwnerCharacter->GetActorLocation() + FVector(0,0,66); 
 	FRotator rot = OwnerCharacter->GetActorRotation();
 	FVector forwardVector = rot.Vector(); 
 

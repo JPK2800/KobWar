@@ -86,6 +86,8 @@ protected:
 
 #pragma region LockOffPause
 
+public:
+
 	UFUNCTION(BlueprintCallable)
 	void PauseForReason(bool Toggle, FName Reason);	// Temporarily disables lock on logic for the input reason
 #pragma endregion
@@ -141,7 +143,6 @@ protected:
 	TArray<FName> ToggleOffReasons = TArray<FName>();
 
 #pragma endregion
-
 
 public:
 

@@ -37,6 +37,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerDisconnect, AController*, Qui
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPlayerSetToTeam, APlayerController*, Player, uint8, TeamId);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FUpdateTimeRemaining, float, NewTimeRemaining, float, TimeAdded);
+
+
+
 
 UCLASS(Blueprintable)
 class AKobWarGameMode : public AGameMode
@@ -65,6 +69,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FPlayerSetToTeam OnPlayerSetToTeam;
+
+	UPROPERTY(BlueprintAssignable)
+	FUpdateTimeRemaining OnUpdateTimeRemaining;
 
 public:
 
@@ -153,6 +160,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GameStart")
 	float PreGameWaitTime = 60.0f;
 
+	// Time untik a new round
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GameStart")
+	float NewRoundWaitTime = 30.0f;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GameStart")
 	FTimerHandle PreGameTimer;
 
@@ -162,7 +173,30 @@ public:
 	UFUNCTION()
 	void InitGameStartTimer();
 
+	UFUNCTION(BlueprintCallable)
+	void InitNewRoundStartTimer();
+
 #pragma endregion
+
+#pragma region Game End
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GameStart")
+	FTimerHandle GameEndTimer;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GameStart")
+	float GameEndTime = 480.0f;
+
+	UFUNCTION()
+	void InitGameEndTimer();
+
+	UFUNCTION(BlueprintCallable)
+	void AddGameTime(float AddTime);
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void TriggerGameEndEvent();
+
+#pragma endregion
+
 
 public:
 

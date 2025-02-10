@@ -74,7 +74,7 @@ private:
 			if (ActionAnimation != nullptr)
 			{
 				int trackIndex = 1;
-				while (ActionAnimation->AnimNotifyTracks.IsValidIndex(trackIndex))
+				while (ActionAnimation->AnimNotifyTracks.IsValidIndex(trackIndex) && trackIndex <= 2)
 				{
 					for (auto& notif : ActionAnimation->AnimNotifyTracks[trackIndex].Notifies)
 					{

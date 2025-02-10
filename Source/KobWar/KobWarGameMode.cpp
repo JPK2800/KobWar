@@ -46,6 +46,24 @@ void AKobWarGameMode::InitGameStartTimer()
 	GetWorld()->GetTimerManager().SetTimer(PreGameTimer, this, &AKobWarGameMode::TriggerGameStartEvent, PreGameWaitTime);
 }
 
+void AKobWarGameMode::InitNewRoundStartTimer()
+{
+	GetWorld()->GetTimerManager().SetTimer(PreGameTimer, this, &AKobWarGameMode::TriggerGameStartEvent, NewRoundWaitTime);
+}
+
+void AKobWarGameMode::InitGameEndTimer()
+{
+	GetWorld()->GetTimerManager().SetTimer(GameEndTimer, this, &AKobWarGameMode::TriggerGameEndEvent, GameEndTime);
+}
+
+void AKobWarGameMode::AddGameTime(float AddTime)
+{
+	float remainingTime = GetWorld()->GetTimerManager().GetTimerRemaining(PreGameTimer);
+	remainingTime += AddTime;
+	GetWorld()->GetTimerManager().SetTimer(GameEndTimer, this, &AKobWarGameMode::TriggerGameEndEvent, remainingTime);
+	OnUpdateTimeRemaining.Broadcast(remainingTime, AddTime);
+}
+
 bool AKobWarGameMode::AddToRespawnQueue(AGamePlayerController* Controller)
 {
 	RespawnQueue.Add(Controller);

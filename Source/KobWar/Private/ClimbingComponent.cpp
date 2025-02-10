@@ -3,6 +3,7 @@
 
 #include "ClimbingComponent.h"
 #include "DrawDebugHelpers.h" 
+#include "LockOnComponent.h"
 #include "Components/CapsuleComponent.h"
 
 // Sets default values for this component's properties
@@ -26,6 +27,8 @@ void UClimbingComponent::BeginPlay()
 	if (AllowClimbing)
 	{
 		SpecialInputBinding(true);
+		MoveDirBinding(true);
+
 	}
 
 	SetComponentTickEnabled(false);
@@ -46,22 +49,22 @@ void UClimbingComponent::InitOwner()
 
 	if (OwnerMovementComp)
 	{
-		DefaultGravityScale = OwnerMovementComp->GetGravityZ();
+		DefaultGravityScale = OwnerMovementComp->GravityScale;
 	}
 	
 }
 
 void UClimbingComponent::SpecialInputBinding(bool Bind)
 {
-	if (Owner)
+	if (Owner && AllowClimbing)
 	{
 		if (Bind)
 		{
-			Owner->OnWeaponSkill.AddDynamic(this, &UClimbingComponent::SpecialInput);
+			Owner->OnDodgeButton.AddDynamic(this, &UClimbingComponent::SpecialInput);
 		}
 		else
 		{
-			Owner->OnWeaponSkill.RemoveDynamic(this, &UClimbingComponent::SpecialInput);
+			Owner->OnDodgeButton.RemoveDynamic(this, &UClimbingComponent::SpecialInput);
 		}
 	}
 }
@@ -76,21 +79,48 @@ void UClimbingComponent::SpecialInput(bool Pressed, bool Released)
 	if (Pressed && !Released)
 	{
 		ClimbHeld = true;
-		if (Pressed && !CurrentClimbMesh)
+		if (!CurrentClimbMesh)
 		{
-			AClimbingMesh* climbMeshFound;
-			if (TraceForClimbableMesh(climbMeshFound))
-			{
-				BeginClimbing(climbMeshFound);
-			}
+			StartTraceTimer();
 		}
 	}
 	else if (Released)
 	{
 		ClimbHeld = false;
-		if (CurrentClimbState == ClimbState::BasicClimbing)
+		EndTraceTimer();
+
+		if (ActionControlComp->GetCurrentAction() != ActionControlComp->GetClimbToTopActionName() && CurrentClimbMesh)
 		{
 			ClimbEnd();
+		}
+		
+	}
+}
+
+void UClimbingComponent::StartTraceTimer()
+{
+	GetWorld()->GetTimerManager().SetTimer(ClimbCheckTimer, this, &UClimbingComponent::TraceForClimb, 0.4f, true);
+}
+
+void UClimbingComponent::EndTraceTimer()
+{
+	GetWorld()->GetTimerManager().ClearTimer(ClimbCheckTimer);
+	ClimbCheckTimer.Invalidate();
+}
+
+void UClimbingComponent::TraceForClimb()
+{
+	if ((ActionControlComp && ActionControlComp->GetCurrentAction() == ActionControlComp->GetClimbToTopActionName()) || Owner->GetState() != ECharacterState::Ready || Owner->GetMovementComponent()->IsFalling())
+	{
+		return;
+	}
+
+	if (!CurrentClimbMesh)
+	{
+		AClimbingMesh* climbMeshFound;
+		if (TraceForClimbableMesh(climbMeshFound))
+		{
+			BeginClimbing(climbMeshFound);
 		}
 	}
 }
@@ -173,10 +203,12 @@ void UClimbingComponent::ToggleClimbingComponent(bool Toggle)
 	if (!AllowClimbing && Toggle)
 	{
 		SpecialInputBinding(true);
+		MoveDirBinding(true);
 	}
 	else if (AllowClimbing && !Toggle)
 	{
 		SpecialInputBinding(false);
+		MoveDirBinding(false);
 	}
 
 	AllowClimbing = Toggle;
@@ -195,17 +227,27 @@ bool UClimbingComponent::BeginClimbing(AClimbingMesh* ClimbableMesh)
 		OwnerMovementComp->GravityScale = 0.0f;
 		OwnerMovementComp->SetMovementMode(EMovementMode::MOVE_Flying);
 		OnMovementModeChangeEvent.Broadcast(EMovementMode::MOVE_Flying);
-		MoveDirBinding(true);
 		ActionEndBinding(true);
 		UpdateAnimationClimbingState(true);
 		UpdateOwnerClimbingState(true);
 		SetComponentTickEnabled(true);
 		Owner->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		Owner->GetCapsuleComponent()->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+		Owner->UpdateState(ECharacterState::Ready);
+		ToggleLockOnLogic(false);
+
+		GetWorld()->GetTimerManager().SetTimer(AllowClimbInputTimer, this, &UClimbingComponent::EndClimbInputTimer, 0.4f);
+		WaitForInputTimerOnClimbStart = true;
+
 		return true;
 	}
 
 	return false;
+}
+
+void UClimbingComponent::EndClimbInputTimer()
+{
+	WaitForInputTimerOnClimbStart = false;
 }
 
 void UClimbingComponent::InterpToClimbingMesh(float DeltaTime)
@@ -238,6 +280,22 @@ void UClimbingComponent::InterpToClimbingMesh(float DeltaTime)
 	Owner->SetActorRotation(newRot);
 }
 
+void UClimbingComponent::ToggleLockOnLogic(bool Allow)
+{
+	if (Owner)
+	{
+		auto* comp = Owner->GetComponentByClass(ULockOnComponent::StaticClass());
+		if (!comp)
+			return;
+
+		auto* lockOnComp = Cast<ULockOnComponent>(comp);
+		if (!lockOnComp)
+			return;
+
+		lockOnComp->PauseForReason(!Allow, FName("Climbing"));
+	}
+}
+
 void UClimbingComponent::UpdateOwnerClimbingState(bool IsClimbing)
 {
 	if (Owner && ActionControlComp)
@@ -254,7 +312,7 @@ void UClimbingComponent::ReceiveClimbMoveInput(float InputY)
 		return;
 	}
 
-	if (CurrentClimbState == ClimbState::BasicClimbing)
+	if (CurrentClimbState == ClimbState::BasicClimbing && !WaitForInputTimerOnClimbStart)
 	{
 		float moveDir = ClimbSpeed * InputY;
 
@@ -281,11 +339,10 @@ void UClimbingComponent::ActionEnd(FName EndedAction)
 
 void UClimbingComponent::ClimbEnd()
 {
-	MoveDirBinding(false);
 	ActionEndBinding(false);
 	CurrentClimbState = ClimbState::NotClimbing;
 	CurrentClimbMesh = nullptr;
-	OwnerMovementComp->GravityScale = 2.0f;
+	OwnerMovementComp->GravityScale = DefaultGravityScale;
 	OwnerMovementComp->SetMovementMode(EMovementMode::MOVE_Walking);
 	OnMovementModeChangeEvent.Broadcast(EMovementMode::MOVE_Walking);
 	//SnapOwnerToSurface();
@@ -295,8 +352,9 @@ void UClimbingComponent::ClimbEnd()
 	SetComponentTickEnabled(false);
 	Owner->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	Owner->GetCapsuleComponent()->SetCollisionObjectType(ECollisionChannel::ECC_Pawn);
-
-
+	Owner->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	Owner->UpdateState(ECharacterState::Ready);
+	ToggleLockOnLogic(true);
 }
 
 void UClimbingComponent::SnapOwnerToSurface()

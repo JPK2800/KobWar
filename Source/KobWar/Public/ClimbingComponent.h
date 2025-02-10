@@ -16,9 +16,6 @@ enum ClimbState
 {
 	NotClimbing = 0,
 	BasicClimbing = 1,
-	ClimbingToTop = 2,
-	ClimbInterrupted = 3,
-	ClimbFalling = 4,
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FClimbStateChange, TEnumAsByte<ClimbState>, ClimbState);
@@ -54,6 +51,12 @@ protected:
 	UFUNCTION()
 	void SpecialInput(bool Pressed, bool Released);
 
+	void StartTraceTimer();
+
+	void EndTraceTimer();
+
+	void TraceForClimb();
+
 	bool TraceForClimbableMesh(AClimbingMesh*& FoundMesh);
 
 #pragma endregion
@@ -71,10 +74,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool BeginClimbing(AClimbingMesh* ClimbableMesh);
 
+	void EndClimbInputTimer();
+
 	void InterpToClimbingMesh(float DeltaTime);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateAnimationClimbingState(bool IsClimbing);
+
+	void ToggleLockOnLogic(bool Allow);
 
 	void UpdateOwnerClimbingState(bool IsClimbing);
 
@@ -95,6 +102,12 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool DebugTrace = false;
+
+	FTimerHandle ClimbCheckTimer;
+
+	bool WaitForInputTimerOnClimbStart = false;
+
+	FTimerHandle AllowClimbInputTimer;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	TEnumAsByte<ClimbState> CurrentClimbState = ClimbState::NotClimbing;
