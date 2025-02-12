@@ -7,6 +7,8 @@
 #include "ClientAuthoritativeCharacter.h"
 #include "LockOnTargSceneComponent.h"
 #include "LockOnComponent.h"
+#include "SoundPlayerComponent.h"
+#include "StealthComponent.h"
 #include "GenericTeamAgentInterface.h"
 #include "KobWarCharacter.generated.h"
 
@@ -69,11 +71,15 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBeginFalling);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSetTeam, uint8, NewTeam);
 
+#pragma endregion
+
+#pragma region State Delegate Declarations
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FStateChange, TEnumAsByte<ECharacterState>, NewState, TEnumAsByte<ECharacterState>, OldState);
 
 #pragma endregion
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FStateChange, TEnumAsByte<ECharacterState>, NewState, TEnumAsByte<ECharacterState>, OldState);
 
 
 UCLASS(config=Game, Blueprintable)
@@ -94,6 +100,9 @@ class AKobWarCharacter : public AClientAuthoritativeCharacter
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions", meta = (AllowPrivateAccess = "true"))
 	class ULockOnTargSceneComponent* LockOnTargetComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions", meta = (AllowPrivateAccess = "true"))
+	class USoundPlayerComponent* SoundComponent;
 
 protected:
 
@@ -202,6 +211,7 @@ public:
 #pragma endregion
 
 
+
 public:
 	AKobWarCharacter(const FObjectInitializer& ObjectInitializer);
 
@@ -252,6 +262,9 @@ public:
 
 	/* True when the character is aiming */
 	bool IsAiming = false;
+
+	/* True when the character is aiming */
+	bool IsStealthed = false;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -448,6 +461,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetAimingState(bool Toggle);
 
+	UFUNCTION(BlueprintCallable)
+	void SetStealthState(bool Toggle);
+
 	/* Getter for the character state */
 	UFUNCTION(BlueprintCallable)
 	ECharacterState GetState();
@@ -493,6 +509,8 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	FORCEINLINE class ULockOnTargSceneComponent* GetLockOnTargScene() const { return LockOnTargetComponent; }
+
+	FORCEINLINE class USoundPlayerComponent* GetSoundPlayer() const { return SoundComponent; }
 
 };
 

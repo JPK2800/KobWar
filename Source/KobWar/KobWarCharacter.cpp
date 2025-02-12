@@ -55,6 +55,7 @@ AKobWarCharacter::AKobWarCharacter(const FObjectInitializer& ObjectInitializer) 
 	LockOnTargetComponent = CreateDefaultSubobject<ULockOnTargSceneComponent>(TEXT("LockOnTargetComponent"));
 	LockOnTargetComponent->SetupAttachment(RootComponent);
 
+	SoundComponent = CreateDefaultSubobject<USoundPlayerComponent>(TEXT("SoundPlayer"));
 }
 
 void AKobWarCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -125,6 +126,10 @@ void AKobWarCharacter::UpdateSpeed()
 	{
 		GetCharacterMovement()->MaxWalkSpeed = ActionControl->GetAimMoveSpeed();
 	}
+	else if (IsStealthed)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = BaseRunSpeed*0.6f;
+	}
 	else if (IsRunning)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = BaseRunSpeed;
@@ -192,6 +197,13 @@ void AKobWarCharacter::SetAimingState(bool Toggle)
 	{
 		ActionControl->SetAiming(Toggle);
 	}
+
+	UpdateSpeed();
+}
+
+void AKobWarCharacter::SetStealthState(bool Toggle)
+{
+	IsStealthed = Toggle;
 
 	UpdateSpeed();
 }
